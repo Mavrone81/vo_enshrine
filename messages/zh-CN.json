@@ -1208,6 +1208,7 @@
       "col": {
         "id": "编号",
         "associate": "顾问",
+        "businessName": "商号名称",
         "designation": "职位",
         "upline": "上线",
         "transacted": "总交易额",

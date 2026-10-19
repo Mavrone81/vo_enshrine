@@ -19,7 +19,7 @@ const TAG = "TEAMDASH-";
 // gets a distinctive non-default value below so a leak is unmistakable.
 const WITHDRAWN_FIELDS = ["mobileNumber", "email", "dateOfBirth"] as const;
 
-const ALLOWED_TOP_LEVEL_KEYS = ["id", "associateCode", "fullName", "designation", "directUplineId", "associateStatus", "directUpline"].sort();
+const ALLOWED_TOP_LEVEL_KEYS = ["id", "associateCode", "fullName", "businessName", "designation", "directUplineId", "associateStatus", "directUpline"].sort();
 
 let uplineId = "";
 let childId = "";
