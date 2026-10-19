@@ -3,7 +3,7 @@ import {
   FileText, Banknote, Megaphone, FolderOpen, Handshake, FileSignature,
   IdCard, FolderLock, Network, ScrollText, ClipboardCheck, Split, FileCheck,
   TrendingUp, Wallet, HandCoins, ListChecks, Mail, Image, Palette,
-  PartyPopper, Store, Sparkles, Landmark, Archive, Building2, type LucideIcon,
+  PartyPopper, Store, Sparkles, Landmark, Archive, Building2, HelpCircle, type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@prisma/client";
 import { RECRUITER_ROLES } from "@/lib/roles";
@@ -120,6 +120,13 @@ export const adminNav: NavGroup[] = [
         children: [
           { labelKey: "notices", href: "/admin/notices", icon: Megaphone },
           { labelKey: "documents", href: "/admin/documents", icon: FolderOpen },
+          // FAQ (owner's request, PM/UIUX spec): a help resource, so it sits
+          // here next to Notices/Documents rather than in Personal
+          // Performance or Finance. No `roles` — every role sees this item;
+          // the CONTENT behind it is what's role-filtered (server-side, see
+          // lib/faq-content), same pattern as Team Dashboard/Team
+          // Performance above.
+          { labelKey: "faq", href: "/admin/faq", icon: HelpCircle },
           { labelKey: "auditLog", href: "/admin/audit", icon: ScrollText, roles: ["Admin"] },
           { labelKey: "uat", href: "/admin/uat", icon: ClipboardCheck, roles: ["Admin"] },
           { labelKey: "companyData", href: "/admin/company", icon: Building2, roles: ["Admin"] },
@@ -296,6 +303,8 @@ export const portalNav: NavGroup[] = [
         children: [
           { labelKey: "notices", href: "/portal/notices", icon: Megaphone, badgeKey: "notices" },
           { labelKey: "documents", href: "/portal/documents", icon: FolderOpen },
+          // FAQ — see the matching comment on adminNav's own entry above.
+          { labelKey: "faq", href: "/portal/faq", icon: HelpCircle },
           // C-6 (p.6): moved here from Submissions, directly below Documents.
           { labelKey: "referralPartnerList", href: "/portal/referrals", icon: ListChecks },
           { labelKey: "myPFile", href: "/portal/pfile", icon: FolderLock },

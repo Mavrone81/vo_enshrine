@@ -73,6 +73,7 @@
     "payouts": "Payouts",
     "notices": "Notices",
     "documents": "Documents",
+    "faq": "FAQ",
     "vendors": "Vendors",
     "nameCard": "Name Card",
     "auditLog": "Audit Log",
@@ -2047,5 +2048,232 @@
     "websiteLabel": "Website",
     "saveDetailsBtn": "Save company details",
     "detailsSaved": "Company details saved."
+  },
+  "faq": {
+    "pageTitle": "FAQ",
+    "pageSubtitle": "Answers for your role — what you can do, and where to find it.",
+    "adminAllRolesNote": "You're a Business Admin, so every role's FAQ is shown below, not just your own.",
+    "searchPlaceholder": "Search FAQs…",
+    "noResults": "No questions match \"{query}\".",
+    "sections": {
+      "SalesAssociate": {
+        "sectionTitle": "Sales Associate",
+        "q": {
+          "whatCanIDo": {
+            "question": "What can I actually do in VirtualOffice?",
+            "answer": "Submit your own sales, send a referral partnership for signing, request a quotation for a closed deal (if that flow is enabled for you), see your own transactions and what's been paid to you, keep your personal file up to date, and download your Name Card. You won't see other associates' sales, splits, or commission."
+          },
+          "howWasIOnboarded": {
+            "question": "How was I onboarded?",
+            "answer": "Your upline sent you a one-time invite link. You filled in your details, uploaded the required photo/signature, and signed your associate agreement on that same device. Once a Business Admin approves it, your account is created and you can log in — until then there's nothing to log into yet."
+          },
+          "whereSubmitSale": {
+            "question": "Where do I submit a new sale?",
+            "answer": "Submissions → Transaction Submission. Pick the product, enter the deal details, and add a split partner if this sale is shared with someone else. You'll see the submission move through approval (if a split is involved) and then quotation approval before it can be closed."
+          },
+          "splitPartnerNext": {
+            "question": "I added a split partner — what happens next?",
+            "answer": "A split needs your Sales Director's (or an Admin's) sign-off, then a separate admin sign-off, before the sale can close. You can see the status of your own submission on your transactions list; you don't see anyone else's pending approvals."
+          },
+          "whereQuotationsAgreements": {
+            "question": "Where do quotations and signed agreements come from?",
+            "answer": "Submissions → My Quotations only appears if you actually have one in flight. Referral Partnership and (where enabled) Quotation Request are signed on your device with the client or partner present — same in-person signing for every document type in this system, nothing is emailed out for a remote signature."
+          },
+          "whatCommissionCanISee": {
+            "question": "What commission figures can I see?",
+            "answer": "Personal Performance → My Transactions. This is your own commission only — your gross amount and what's actually been paid to you. You never see the company's share, anyone else's split, or another associate's numbers. Split percentages, where shown, are always to 2 decimal places."
+          },
+          "whereAreMyDocuments": {
+            "question": "Where are my documents?",
+            "answer": "Resources → Documents for anything shared with you, and Resources → My P-File for your own personal file (the records tied to your own onboarding/profile). Referral partner agreements you're party to are listed under Resources → Referral Partner List."
+          },
+          "whoDoIContact": {
+            "question": "Who do I contact if something's wrong?",
+            "answer": "A split or quotation that needs approval — your Sales Director. A payout, invoice, or account question — Accounts or a Business Admin. Anything you can't do that you think you should be able to — ask your upline first; most access is tied to role, not a setting you can change yourself."
+          }
+        }
+      },
+      "SalesAssistantManager": {
+        "sectionTitle": "Sales Assistant Manager",
+        "q": {
+          "whatsDifferent": {
+            "question": "What's different for me compared to a Sales Associate?",
+            "answer": "You get Team Performance's full team view — the stat tiles and the team sales/commission tables, same as a Sales Manager or Director sees. What you don't get is the per-associate downline table underneath them, or \"Invite Candidate\" — recruiting a new associate is Sales Manager and above. Where that table would be, you get a \"not eligible for recruitment yet\" card instead."
+          },
+          "canIInvite": {
+            "question": "Can I invite a new associate?",
+            "answer": "Not from this role. Invite Candidate is restricted to Sales Manager, Sales Director, and Business Admin. If recruiting is part of your work, it's done through your own upline at Manager level or above."
+          },
+          "teamPerformanceShows": {
+            "question": "What does Team Performance show me, exactly?",
+            "answer": "The same six stat tiles and team sales/commission tables a Sales Manager sees — your downline's activity as a team. The one thing missing is the per-associate downline breakdown (transacted value, gross commission, overrides) that a recruiter-level role sees below those tables; you get a \"not eligible for recruitment yet\" card in its place instead."
+          },
+          "doIApprove": {
+            "question": "Do I approve anything for my team?",
+            "answer": "No. Split Approvals is Sales Director and Business Admin only — a Sales Assistant Manager doesn't sit in that approval chain."
+          },
+          "canISetQuota": {
+            "question": "Can I set a quota for someone in my downline?",
+            "answer": "Yes — quota-setting is its own authority, separate from recruiting: Sales Assistant Manager and above can set a downline member's monthly quota, even though you can't recruit or see the per-associate downline table. A higher-ranked manager can override a quota you've set; you can't override theirs."
+          },
+          "whereMyCommission": {
+            "question": "Where's my own commission?",
+            "answer": "Same as every associate: Personal Performance → My Transactions, your own figures only. Your team view doesn't add visibility into anyone's individual commission beyond the team-wide tables."
+          },
+          "howSubmitMySale": {
+            "question": "How do I submit my own sale?",
+            "answer": "Same as a Sales Associate: Submissions → Transaction Submission."
+          },
+          "whoDoIContact": {
+            "question": "Who do I contact?",
+            "answer": "Downline/recruiting questions — your own Sales Manager or Director. Your own split/quotation approvals — same as any associate, a Sales Director or Admin. Payouts/invoices — Accounts or Business Admin."
+          }
+        }
+      },
+      "SalesManager": {
+        "sectionTitle": "Sales Manager",
+        "q": {
+          "whatCanIDoMore": {
+            "question": "What can I do that an Assistant Manager can't?",
+            "answer": "Send a new \"Invite Candidate\" to recruit someone into your downline. You also get the same Team Dashboard roster and Team Performance manager view, plus everything on your own transactions."
+          },
+          "doIApproveSplits": {
+            "question": "Do I approve splits for my team?",
+            "answer": "No — Split Approvals is Sales Director and Business Admin only. As a Sales Manager you're a recruiter and you see your team's performance, but split sign-off sits one level up."
+          },
+          "howInviteCandidate": {
+            "question": "How do I invite a new candidate?",
+            "answer": "My Team → Invite Candidate. They get a one-time link, fill in their details, upload what's required, and sign their agreement — same onboarding flow every new associate goes through. Approval is a separate step once they've submitted."
+          },
+          "whatsOnTeamDashboard": {
+            "question": "What's on my Team Dashboard?",
+            "answer": "Your downline roster — the associates under you, their designations, and recruitment-related figures. This is separate from Team Performance, which is sales/commission activity rather than the roster itself."
+          },
+          "whereSubmitTrack": {
+            "question": "My own sale — where do I submit and track it?",
+            "answer": "Submissions → Transaction Submission to submit; Personal Performance → My Transactions to track your own figures and what's been paid."
+          },
+          "whatCommissionCanISee": {
+            "question": "What commission can I see?",
+            "answer": "Your own, same as every other sales role — never the company's share or another associate's number, including anyone in your own downline."
+          },
+          "canISetQuota": {
+            "question": "Can I set a quota for my downline?",
+            "answer": "Yes — and you can override a quota a Sales Assistant Manager set for someone in your downline, since your rank is higher. A Sales Director or Business Admin can, in turn, override yours."
+          },
+          "whoDoIContact": {
+            "question": "Who do I contact?",
+            "answer": "Split approvals for a sale you submitted — a Sales Director or Business Admin. Recruitment/designation questions for your downline — Business Admin. Payout or invoice questions — Accounts."
+          }
+        }
+      },
+      "SalesDirector": {
+        "sectionTitle": "Sales Director",
+        "q": {
+          "whatsUnique": {
+            "question": "What's unique to my role?",
+            "answer": "Split Approvals — Sales Director and Business Admin are the only two roles that sign off a split before it goes to the second (admin) approval. You're also a recruiter and a manager, same as a Sales Manager, with the roster and team-performance views."
+          },
+          "whereApproveSplit": {
+            "question": "Where do I approve a split?",
+            "answer": "My Team → Split Approvals. You'll see the split as it was entered (the raw percentage or amount, shown to 2 decimal places where it's a percentage) — approve, revert, or wait for the 3-day automatic approval window if that's how your team runs it."
+          },
+          "canIApproveAnyAssociate": {
+            "question": "Can I approve a split for any associate, or only my own team?",
+            "answer": "Only within your scope as the assigned director for that submission — this isn't an organisation-wide approval queue."
+          },
+          "doISeeOtherDirectors": {
+            "question": "Do I see other directors' downlines?",
+            "answer": "No — you see your own downline only, the same self/downline scoping every manager role gets. A director doesn't get visibility into a peer director's team."
+          },
+          "howInviteCandidate": {
+            "question": "How do I invite a new candidate?",
+            "answer": "My Team → Invite Candidate, same flow as a Sales Manager."
+          },
+          "whatCommissionFigures": {
+            "question": "What commission figures do I see?",
+            "answer": "Your own transactions, same as any sales role. Approving a split shows you the raw split value entered, not a breakdown of the company's share or anyone else's final payout number."
+          },
+          "canISetQuota": {
+            "question": "Can I set a quota for my downline?",
+            "answer": "Yes, at the highest tier along with Business Admin — you can override a quota a Sales Manager or Sales Assistant Manager set for someone in your downline."
+          },
+          "whoDoIContact": {
+            "question": "Who do I contact?",
+            "answer": "For anything outside your own approval authority, or an account/payout question — Business Admin or Accounts."
+          }
+        }
+      },
+      "Admin": {
+        "sectionTitle": "Business Admin",
+        "q": {
+          "whatCanISeeVsAccounts": {
+            "question": "What can I see and do that Accounts can't?",
+            "answer": "Manage products and commission structures, manage user logins and roles (including resetting an associate's password), manage company/invoice entities, manage another user's Name Card, and issue a manual commission override. Everything else in the admin area — quotations, split approvals, payouts, invoices, documents — Accounts can also do."
+          },
+          "whereApproveOnboarding": {
+            "question": "Where do I approve a new associate's onboarding?",
+            "answer": "Recruitment → Associates. A submitted onboarding form moves from Invited → Form Submitted → Signed/Pending Approval, and you approve or reject it there. Rejecting doesn't delete the candidate's submission; it just stops it moving forward."
+          },
+          "howHandleApprovals": {
+            "question": "How do I handle split or quotation approvals that reach my desk?",
+            "answer": "Forms & Submission → Split Approvals and → Quotations. You can approve a split either as the director-level sign-off or the admin-level one, and you approve quotations before a sale can close."
+          },
+          "whereMoneySide": {
+            "question": "Where's the money side of things?",
+            "answer": "Finance → Commission Dashboard, Invoices, Payouts. This is the admin-area view of commission structure and payout runs — not the same screen an associate sees for their own figures."
+          },
+          "canISubmitSale": {
+            "question": "Can I submit a sale myself?",
+            "answer": "Yes — Forms & Submission → Transaction Submission, same action every sales role uses. Your own submitted sales are listed under My Sales so you're not stuck with a sale and nowhere to see it."
+          },
+          "whereManageProducts": {
+            "question": "Where do I manage products and commission structure?",
+            "answer": "Products & Services → Products. This is Business-Admin-only; Accounts doesn't have this capability."
+          },
+          "whatsAdminOnly": {
+            "question": "What's Admin-only that Accounts won't see in their menu at all?",
+            "answer": "Teams (under Recruitment), Products, Audit Log, UAT results, and Company Data — these four nav items are hidden from Accounts, not just disabled."
+          },
+          "whoContactsMe": {
+            "question": "Who do associates and managers contact me about?",
+            "answer": "Onboarding approvals, access/role questions, product or commission-structure changes, and anything Accounts isn't permitted to do."
+          }
+        }
+      },
+      "Accounts": {
+        "sectionTitle": "Accounts",
+        "q": {
+          "whatCanIDo": {
+            "question": "What can I do here?",
+            "answer": "Everything in the admin area except managing products/commission structures, user logins and roles, company/invoice entities, another user's Name Card, and manual commission overrides. Split approvals, quotation approvals, payouts, and invoices are all yours to handle."
+          },
+          "canIApproveSplitOrQuotation": {
+            "question": "Can I approve a split or a quotation?",
+            "answer": "Yes — both the admin-level split sign-off and quotation approval are open to Accounts, same as Business Admin."
+          },
+          "whereRunPayouts": {
+            "question": "Where do I run payouts?",
+            "answer": "Finance → Payouts. Generating the bank file for a payout run requires a fresh re-authentication (re-entering your password) as an extra check before it produces something that pays people."
+          },
+          "canISeeEditProducts": {
+            "question": "Can I see or edit products and commission rates?",
+            "answer": "No — that's Business-Admin-only. If a rate or structure needs to change, raise it with a Business Admin."
+          },
+          "canIResetLogin": {
+            "question": "Can I reset someone's login or change their role?",
+            "answer": "No — user/login management is Business-Admin-only. Ask a Business Admin."
+          },
+          "whereInvoices": {
+            "question": "Where do I see invoices?",
+            "answer": "Finance → Invoices. Marking an invoice paid or unpaid is part of the same admin-area flow Business Admin uses."
+          },
+          "whoDoIContact": {
+            "question": "Who do I contact for what's outside my access?",
+            "answer": "A Business Admin for anything above, or for Teams, Products, Audit Log, UAT results, and Company Data — none of which appear in your own menu."
+          }
+        }
+      }
+    }
   }
 }
