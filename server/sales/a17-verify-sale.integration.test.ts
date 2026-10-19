@@ -17,6 +17,7 @@ const ADMIN_B = "66666666-6666-6666-6666-666666666666";
 let companyId = "", plainProductId = "", ashesProductId = "", docProductId = "", closerId = "", partnerId = "";
 let submitSale: (input: unknown) => Promise<{ id?: string; warning?: { code: string } }>;
 let verifySale: (submissionId: string, seenContentVersion: number) => Promise<{ ok: boolean; error?: string; transactionId?: string }>;
+let rejectSubmission: (submissionId: string, reason?: string) => Promise<{ ok: boolean; error?: string }>;
 let getVerifyChecklist: (submissionId: string, seenContentVersion?: number) => Promise<
   { ok: true; gates: { key: string; pass: boolean; reasonKey?: string }[]; allPass: boolean; contentVersion: number } | { ok: false; error: string }
 >;
@@ -27,7 +28,7 @@ const FAKE_PNG_DATA_URL = `data:image/png;base64,${Buffer.from([0x89, 0x50, 0x4e
 beforeAll(async () => {
   process.env.A17_CLOSED_DEAL_FLOW = "true";
   vi.resetModules();
-  ({ submitSale, verifySale, getVerifyChecklist } = (await import("./actions")) as never);
+  ({ submitSale, verifySale, rejectSubmission, getVerifyChecklist } = (await import("./actions")) as never);
   ({ signAshesAgreement } = (await import("@/server/agreements/actions")) as never);
 
   companyId = (await prisma.company.create({ data: { name: TAG + "Co", invoicePrefix: TAG + "INV", active: true }, select: { id: true } })).id;
@@ -339,6 +340,39 @@ describe("getVerifyChecklist — read-only, same gates as verifySale, never writ
     const r2 = await checklistAsAdmin(subId);
     if (!r2.ok) throw new Error("expected ok");
     expect(r2.gates.find((g) => g.key === "G3")).toEqual({ key: "G3", pass: true });
+  });
+
+  // DevLead review, req-3 sweep (follow-up to #3/#5's Rejected value):
+  // resolveProductDocGate's BACKSTOP check ("an agreement that was ever
+  // required... must still be enforced even if the product's flag has
+  // since been turned off") used a negative `!== Superseded`, which
+  // silently absorbed Rejected too. This only shows up when the line
+  // item's CURRENT product doesn't itself require ashes any more (the
+  // first loop's own `requiresAshesAgreement` signal is already false) but
+  // a legacy agreement row is still attached — exactly the scenario the
+  // backstop exists for. getVerifyChecklist has no submission-status
+  // guard of its own (unlike verifySale's explicit `status !== Submitted`
+  // refusal), so this was reachable on a rejected sale.
+  it("G3 backstop: a legacy ashes agreement (now Rejected) on a plain-product sale does NOT make G3 wrongly require it", async () => {
+    const subId = await submitPlain("Checklist Rejected Backstop Client", { productId: plainProductId });
+    await prisma.petsAshesAgreement.create({
+      data: {
+        submissionId: subId, applicant1Name: "Checklist Rejected Backstop Client",
+        amountNumeric: "1000", amountWords: "One thousand", paymentPlan: "FullPayment" as never,
+        status: "Draft" as never,
+      },
+    });
+
+    who.session = { user: { id: ADMIN_A, associateId: null, role: "Admin" } };
+    const rejected = await rejectSubmission(subId, "checklist-rejected-backstop-test");
+    expect(rejected.ok).toBe(true);
+
+    const agreement = await prisma.petsAshesAgreement.findUniqueOrThrow({ where: { submissionId: subId }, select: { status: true } });
+    expect(agreement.status).toBe("Rejected"); // cascaded, never-signed branch
+
+    const r = await checklistAsAdmin(subId);
+    if (!r.ok) throw new Error("expected ok");
+    expect(r.gates.find((g) => g.key === "G3")).toEqual({ key: "G3", pass: true });
   });
 
   it("G2/G5: a negative-line split with an exception approved by THIS admin fails G5 but not G2", async () => {

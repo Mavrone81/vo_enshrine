@@ -1189,7 +1189,16 @@ async function resolveProductDocGate(
   // An agreement that was ever required and hasn't been Superseded by a later
   // edit (✎6) must still be enforced even if the product's flag has since
   // been turned off with no edit in between to retire it.
-  if (ashesAgreement && ashesAgreement.status !== AshesAgreementStatus.Superseded) needsAshes = true;
+  //
+  // Positive match on the LIVE states, not a negative `!== Superseded` --
+  // DevLead review, req-3 sweep for the Rejected value (follow-up to #3):
+  // a negative check silently absorbs any future terminal value the same
+  // way it absorbed Rejected here. getVerifyChecklist (below) has no
+  // submission-status guard of its own, unlike verifySale's explicit
+  // `status !== Submitted` refusal -- so a Rejected closed-deal
+  // submission's agreement was reaching this line and reading needsAshes
+  // true, i.e. G3 treating a terminal sale as still needing the agreement.
+  if (ashesAgreement && (ashesAgreement.status === AshesAgreementStatus.Draft || ashesAgreement.status === AshesAgreementStatus.Signed)) needsAshes = true;
   const requiredDocs = [...requiredDocsByKey.values()];
   return { missingProductCodes, requiredKeys: requiredDocs.map((d) => d.key), requiredDocs, needsAshes };
 }
