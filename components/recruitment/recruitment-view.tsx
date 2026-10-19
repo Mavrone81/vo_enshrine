@@ -23,6 +23,13 @@ import { TABLE_HEAD_ROW_CLS, TABLE_HEAD_CELL_CLS } from "@/components/ui/table";
  * state instead of the table. The rule is lib/rbac canRecruit (Manager and
  * above — A9, owner ruling 2026-09-26: the PDF wins over the earlier 1 Sep AM+
  * decision; Sales Assistant Manager is no longer eligible).
+ *
+ * Business name (19 Oct 2026, owner-approved VO PR2): "people" mode only —
+ * the owner's request was specifically the Recruitment tab's associate list,
+ * not Downline Performance. Reuses the exact row set `rows` already is
+ * (same treeIds/downlineIds scoping as every other column here); this adds
+ * no new query and no new row. Missing/null renders as "—" (the same
+ * fallback every other optional column in this codebase uses), never blank.
  */
 export async function RecruitmentView({ mode, basePath, tab, mgr, embedded = false }: {
   mode: "people" | "performance";
@@ -121,6 +128,7 @@ export async function RecruitmentView({ mode, basePath, tab, mgr, embedded = fal
               <tr className={TABLE_HEAD_ROW_CLS}>
                 <th className={th}>{t("col.id")}</th>
                 <th className={th}>{t("col.associate")}</th>
+                {mode === "people" && <th className={th}>{t("col.businessName")}</th>}
                 <th className={th}>{t("col.designation")}</th>
                 {showUpline && <th className={th}>{t("col.upline")}</th>}
                 {mode === "people" ? (
@@ -144,6 +152,7 @@ export async function RecruitmentView({ mode, basePath, tab, mgr, embedded = fal
                     <tr key={a.id} className="border-b border-line-200 last:border-0 hover:bg-paper-100">
                       <td className="px-4 py-3 font-medium text-ink">{a.associateCode}</td>
                       <td className="px-4 py-3 text-ink">{a.fullName}</td>
+                      {mode === "people" && <td className="px-4 py-3 text-ink">{a.businessName ?? "—"}</td>}
                       <td className="px-4 py-3 text-muted">{humanize(a.designation)}</td>
                       {showUpline && <td className="px-4 py-3 text-muted">{a.directUpline?.associateCode ?? "—"}</td>}
                       {mode === "people" ? (

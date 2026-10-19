@@ -9,10 +9,19 @@ import { prisma } from "@/lib/db";
 // columns, so none of the three reach the query result for this read path at
 // all. See team-dashboard.integration.test.ts for the proof (with controls
 // that fail if this select is widened to include any of them).
+//
+// businessName added 19 Oct 2026 (owner-approved VO PR2, Director →
+// Recruitment tab): unlike the PDPA-withdrawn fields above, this is not
+// contact/identity PII — it's the associate's own business/trading name,
+// same visibility class as fullName on this same row. Row scope is
+// unchanged: this only adds a column to the existing select, over the same
+// treeIds the caller already resolved (lib/rbac's downlineIds / the
+// recruitment-view.tsx caller), never a broadened query.
 export const TEAM_DASHBOARD_ASSOCIATE_SELECT = {
   id: true,
   associateCode: true,
   fullName: true,
+  businessName: true,
   designation: true,
   directUplineId: true,
   associateStatus: true,

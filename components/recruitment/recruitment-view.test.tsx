@@ -75,3 +75,65 @@ describe("RecruitmentView — the not-eligible card", () => {
     expect(strings).toContain("notEligible");
   });
 });
+
+/**
+ * Business name column (19 Oct 2026, owner-approved VO PR2): Director →
+ * Recruitment tab ("people" mode) only. `fetchAssociates` stands in for
+ * fetchTeamDashboardAssociates — it's mocked, so these tests prove the
+ * COMPONENT's own behaviour (dash fallback, and that it never renders a row
+ * outside the tree rooted at `me`), not the server-side select or the real
+ * downlineIds SQL (those are proven elsewhere: team-dashboard.integration.test.ts
+ * and lib/rbac's own tests).
+ */
+describe("RecruitmentView — Business name column (people mode)", () => {
+  // tab: "direct" (not "all") deliberately — it sets showUpline to false,
+  // suppressing the OTHER column on this exact table whose own fallback is
+  // also "—" (a.directUpline?.associateCode ?? "—"). Using "all" would let
+  // that column's dash satisfy a `toContain("—")` assertion even if the
+  // business-name fallback below were deleted — caught by mutation-testing
+  // this file (removing the `?? "—"` left the dash test green under "all").
+  const renderPeople = async (rows: Array<{ id: string; directUplineId: string | null; associateCode: string; fullName: string; businessName: string | null; designation: string; associateStatus: string; directUpline: null }>) => {
+    h.role = "SalesDirector";
+    h.fetchAssociates.mockImplementation(async () => rows as never);
+    const tree = await RecruitmentView({ mode: "people", basePath: "/portal/team", tab: "direct", mgr: null, embedded: true });
+    return text(tree);
+  };
+
+  const row = (overrides: Partial<{ id: string; directUplineId: string | null; businessName: string | null }>) => ({
+    id: "R1",
+    directUplineId: "A1",
+    associateCode: "VO-R1",
+    fullName: "Real Recruit",
+    businessName: "Acme Trading",
+    designation: "SalesAssociate",
+    associateStatus: "Active",
+    directUpline: null,
+    ...overrides,
+  });
+
+  it("renders the real business name when present", async () => {
+    const strings = await renderPeople([row({ businessName: "Acme Trading" })]);
+    expect(strings).toContain("Acme Trading");
+  });
+
+  it("renders a dash (the codebase's standard missing-value fallback) when business name is null, never an empty cell", async () => {
+    const strings = await renderPeople([row({ businessName: null })]);
+    // Same character every other optional column in this codebase falls back
+    // to (components/team/downline-lookup-panel.tsx, app/portal/team/page.tsx,
+    // etc.) — not a different "missing" glyph invented for this one column.
+    expect(strings).toContain("—");
+    expect(strings).not.toContain("Acme Trading");
+  });
+
+  it("never renders a business name for a row outside my downline tree — adding the column leaks no extra row", async () => {
+    const strings = await renderPeople([
+      row({ id: "R1", directUplineId: "A1", businessName: "Acme Trading" }), // in my tree (direct recruit)
+      row({ id: "R2", directUplineId: "SOMEONE-ELSE", businessName: "Leaked Biz" }), // NOT reachable from me
+    ]);
+    // selectRecruits/descendants (lib/recruitment-view.ts) already drops R2
+    // before the table ever sees it; this proves the new column doesn't
+    // change that — it only ever renders alongside a row already in `rows`.
+    expect(strings).toContain("Acme Trading");
+    expect(strings).not.toContain("Leaked Biz");
+  });
+});

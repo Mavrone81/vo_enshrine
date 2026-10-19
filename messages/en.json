@@ -1208,6 +1208,7 @@
       "col": {
         "id": "ID",
         "associate": "Associate",
+        "businessName": "Business name",
         "designation": "Designation",
         "upline": "Upline",
         "transacted": "Total transacted value",
