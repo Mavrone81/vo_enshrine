@@ -79,6 +79,26 @@ describe("saveAshesAgreement — status gate", () => {
     expect(r).toEqual({ ok: false, error: "quotationNotApproved" });
   });
 
+  // Owner bug report, 19 Oct 2026: a REJECTED submission's agreement is a
+  // terminal state (app/portal/sales/[id]/agreement/page.tsx's own fix for
+  // the UI half of the same report — it now renders read-only instead of
+  // redirecting). This proves the SERVER side independently refuses the
+  // write too — not just the UI choosing not to show an edit form — for
+  // BOTH flows and regardless of whether the agreement row is still a
+  // never-signed Draft (the exact bug: "its draft agreement stayed draft").
+  it("ClosedDeal + Rejected: refused — a terminal submission's agreement can't be edited server-side, UI-greying is not enough", async () => {
+    prismaMock.salesSubmission.findUnique.mockResolvedValue(subFixture({ flow: "ClosedDeal", status: "Rejected", ashesAgreement: { id: "a1", status: "Draft" } }));
+    const r = await saveAshesAgreement("sub1", MIN_INPUT);
+    expect(r).toEqual({ ok: false, error: "quotationNotApproved" });
+    expect(prismaMock.petsAshesAgreement.update).not.toHaveBeenCalled();
+  });
+
+  it("Legacy + Rejected: refused — same server-side terminal check, other flow", async () => {
+    prismaMock.salesSubmission.findUnique.mockResolvedValue(subFixture({ flow: "Legacy", status: "Rejected", ashesAgreement: { id: "a1", status: "Draft" } }));
+    const r = await saveAshesAgreement("sub1", MIN_INPUT);
+    expect(r).toEqual({ ok: false, error: "quotationNotApproved" });
+  });
+
   it("still refuses once already Signed, regardless of the status gate", async () => {
     prismaMock.salesSubmission.findUnique.mockResolvedValue(subFixture({ flow: "ClosedDeal", status: "Submitted", ashesAgreement: { id: "a1", status: "Signed" } }));
     const r = await saveAshesAgreement("sub1", MIN_INPUT);

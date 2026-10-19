@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { SubmissionStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { isAdminRole } from "@/lib/rbac";
@@ -30,7 +31,15 @@ export default async function AshesAgreementPage({ params }: { params: Promise<{
   if (!sub) notFound();
   const mine = !!session.user.associateId && session.user.associateId === sub.closingAssociateId;
   if (!mine && !isAdminRole(session.user.role)) notFound();
-  if (!isAgreementEditableStatus(sub.flow, sub.status)) redirect("/portal/quotations");
+  // A rejected submission is terminal, not merely "not yet editable" — its
+  // agreement must render read-only (bug report, 19 Oct 2026: a rejected
+  // submission's draft agreement stayed Draft and Open bounced to
+  // /portal/quotations instead of showing anything). Every OTHER
+  // not-yet-editable status (QuotationApproved/Verified for ClosedDeal,
+  // Submitted for Legacy) keeps the existing redirect — unchanged, out of
+  // scope for this fix.
+  const rejected = sub.status === SubmissionStatus.Rejected;
+  if (!rejected && !isAgreementEditableStatus(sub.flow, sub.status)) redirect("/portal/quotations");
 
   const a = sub.ashesAgreement;
   // SEC-12: decrypt for the edit-form prefill (or tolerate still-plaintext
@@ -54,6 +63,7 @@ export default async function AshesAgreementPage({ params }: { params: Promise<{
           submissionId={sub.id}
           isInstalment={sub.paymentPlan === "Installment"}
           signed={a?.status === "Signed"}
+          readOnly={rejected}
           agreementPdfKey={a?.agreementPdfKey ?? null}
           initial={{
             storageSpaceLocation: a?.storageSpaceLocation ?? "",

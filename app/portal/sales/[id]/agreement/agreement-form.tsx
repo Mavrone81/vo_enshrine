@@ -24,12 +24,22 @@ export function AshesAgreementForm({
   submissionId,
   isInstalment,
   signed,
+  readOnly = false,
   agreementPdfKey,
   initial,
 }: {
   submissionId: string;
   isInstalment: boolean;
   signed: boolean;
+  // The sale was rejected — terminal, checked ahead of `signed` below: a
+  // rejected sale's agreement renders read-only regardless of whether it was
+  // ever signed. No inputs/buttons are rendered at all (same "replace the
+  // form with a message card" pattern `signed` already uses), which is what
+  // satisfies "all edit/sign/submit controls disabled" — there's nothing to
+  // re-enable, there's nothing rendered. The server actions refuse the writes
+  // independently (saveAshesAgreement/signAshesAgreement's own
+  // isAgreementEditableStatus gate) — this is belt, not suspenders.
+  readOnly?: boolean;
   agreementPdfKey: string | null;
   initial: F;
 }) {
@@ -66,6 +76,21 @@ export function AshesAgreementForm({
       if (r.ok) router.refresh();
       else setError(r.error);
     });
+  }
+
+  if (readOnly) {
+    return (
+      <Card className="p-6">
+        <h3 className="font-display text-[17px] text-muted">{t("form.rejectedTitle")}</h3>
+        <p className="mt-1.5 text-[13px] text-muted">{t("form.rejectedBody")}</p>
+        {agreementPdfKey && (
+          <a href={`/api/files/${agreementPdfKey}`} target="_blank" rel="noopener"
+            className="mt-3 inline-block text-[13px] text-action hover:underline">
+            {t("form.viewPdf")}
+          </a>
+        )}
+      </Card>
+    );
   }
 
   if (signed) {
