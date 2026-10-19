@@ -45,6 +45,7 @@ let submitOnboarding: (token: string, s: unknown) => Promise<{ ok: boolean; erro
 let approveCandidate: (id: string) => Promise<{ ok: boolean; error?: string; code?: string }>;
 
 const validSubmission = {
+  fullName: "Jane Tan",
   commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   nric: "S1234567A",
   paymentMethod: "PayNow" as const,

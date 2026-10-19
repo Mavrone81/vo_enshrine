@@ -363,6 +363,7 @@ describe("onboardingSchema", () => {
     expect(
       onboardingSchema.safeParse({
         commencementDate: VALID_COMMENCEMENT_DATE,
+        fullName: "Jane Tan",
         nric: "S1234567A",
         paymentMethod: "PayNow",
         agreementAccepted: true,
@@ -381,6 +382,7 @@ describe("onboardingSchema", () => {
     expect(
       onboardingSchema.safeParse({
         commencementDate: VALID_COMMENCEMENT_DATE,
+        fullName: "Jane Tan",
         nric: "S1234567A", paymentMethod: "PayNow", agreementAccepted: true,
         nationality: "Singaporean", gender: "Male", religion: "Buddhism",
       }).success,
@@ -389,6 +391,7 @@ describe("onboardingSchema", () => {
 
   const base = {
     commencementDate: VALID_COMMENCEMENT_DATE,
+        fullName: "Jane Tan",
     nric: "S1234567A", paymentMethod: "PayNow" as const, agreementAccepted: true,
     nationality: "Singaporean", gender: "Male" as const, religion: "Buddhism",
     spouseConflict: false as const,
