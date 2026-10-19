@@ -49,6 +49,7 @@ vi.mock("@/lib/pdf/agreement", () => ({
 vi.mock("@/lib/mail", () => ({ sendMail: vi.fn(), onboardingInviteEmail: vi.fn(), approvalEmail: vi.fn() }));
 
 import { submitOnboarding } from "./actions";
+import { renderAgreementPdf } from "@/lib/pdf/agreement";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -74,6 +75,7 @@ describe("submitOnboarding validation", () => {
     // checks: nric present, agreementAccepted true, signature present) but
     // paymentMethod is outside the enum — only schema validation catches this.
     const malformed = {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "S1234567A",
       paymentMethod: "Crypto",
@@ -100,6 +102,7 @@ describe("submitOnboarding validation", () => {
   it("does not reject cleared optional fields sent as empty strings (form clears to '', not undefined)", async () => {
     prismaMock.candidate.update.mockResolvedValue({});
     const r = await submitOnboarding("tok123", {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "S1234567A",
       paymentMethod: "PayNow",
@@ -119,6 +122,7 @@ describe("submitOnboarding validation", () => {
   // object storage, same as any other invalid-input refusal.
   it("refuses an otherwise well-formed submission that omits spouseConflict, with a clear message", async () => {
     const r = await submitOnboarding("tok123", {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "S1234567A",
       paymentMethod: "PayNow",
@@ -136,6 +140,7 @@ describe("submitOnboarding validation", () => {
   // not just their name and company — the field this ruling added.
   it("refuses a declared spouse conflict missing the spouse's designation", async () => {
     const r = await submitOnboarding("tok123", {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "S1234567A",
       paymentMethod: "PayNow",
@@ -155,6 +160,7 @@ describe("submitOnboarding validation", () => {
   // Each missing required field gets ITS OWN code — never the bare "invalidInput"
   // that left a new associate with no way to tell what was wrong.
   const complete = {
+    fullName: "Jane Tan",
     commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     nric: "S1234567A", paymentMethod: "PayNow" as const, agreementAccepted: true,
     nationality: "Singaporean", gender: "Male" as const, religion: "Buddhism",
@@ -183,9 +189,10 @@ describe("submitOnboarding validation", () => {
   it("reports the FIRST missing field in document order when several are missing", async () => {
     // commencementDate is given (and valid) so this test isolates document
     // order among the fields it actually means to cover (nric ahead of
-    // nationality/gender/etc) rather than trivially landing on
-    // commencementDate itself, which now sits first in ONBOARDING_FIELD_ORDER.
+    // nationality/gender/etc) rather than trivially landing on fullName or commencementDate, which now sit
+    // first in ONBOARDING_FIELD_ORDER (both supplied here).
     const incomplete = {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "", paymentMethod: "PayNow", agreementAccepted: false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- deliberately incomplete input
@@ -208,5 +215,23 @@ describe("submitOnboarding validation", () => {
     const r = await submitOnboarding("tok123", { ...complete, commencementDate: yesterday });
     expect(r).toEqual({ ok: false, error: "commencementDateOutOfRange" });
     expect(prismaMock.candidate.update).not.toHaveBeenCalled();
+  });
+
+  // Owner request 2026-10-19: the candidate fills their own "Full Name as per
+  // NRIC" at onboarding, and THAT name — not the inviter-set name on the
+  // candidate row — is what the agreement's "Name of Applicant" box carries and
+  // what is persisted. Non-vacuous by a real decoy: the beforeEach candidate
+  // mock is "Jane Tan", the submission below is "Tan Wei Ming", so a regression
+  // to c.fullName would stamp/persist "Jane Tan" and fail here.
+  it("stamps and persists the candidate's own submitted full name, not the inviter-set name", async () => {
+    prismaMock.candidate.update.mockResolvedValue({});
+    const r = await submitOnboarding("tok123", { ...complete, fullName: "Tan Wei Ming" });
+    expect(r).toEqual({ ok: true });
+    expect(vi.mocked(renderAgreementPdf)).toHaveBeenCalledWith(
+      expect.objectContaining({ fullName: "Tan Wei Ming" }),
+    );
+    expect(prismaMock.candidate.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ fullName: "Tan Wei Ming" }) }),
+    );
   });
 });

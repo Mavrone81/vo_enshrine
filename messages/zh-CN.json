@@ -531,6 +531,8 @@
     },
     "details": {
       "title": "您的个人资料",
+      "fullName": "全名（与身份证一致）*",
+      "fullNamePlaceholder": "请填写与您身份证／护照完全一致的全名",
       "commencementDate": "入职日期 *",
       "commencementDateHint": "您的入职日期。须为今天或之后，且在 12 个月内。",
       "businessName": "商业／交易名称",

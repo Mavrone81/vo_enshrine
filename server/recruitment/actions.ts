@@ -222,6 +222,10 @@ export type OnboardingSubmission = {
   // The candidate's OWN, mandatory commencement date (owner ruling
   // 2026-10-17) — supersedes the inviter's own, now-optional field.
   commencementDate: string;
+  // Owner request 2026-10-19: the candidate's own full legal name as per
+  // NRIC/passport, filled at onboarding and stamped onto the agreement's "Name
+  // of Applicant" box (previously only the inviter-set name was used).
+  fullName: string;
   businessName?: string;
   nric: string;
   dateOfBirth?: string;
@@ -454,8 +458,13 @@ export async function submitOnboarding(
   // reserveAssociateCodeForCandidate.
   const reservedAssociateCode = await reserveAssociateCodeForCandidate(c.id);
 
+  // Owner request 2026-10-19: the applicant's name on the agreement is the full
+  // legal name the candidate enters at onboarding (as per NRIC/passport), not
+  // the inviter-set name on the candidate row. Trimmed; onboardingSchema has
+  // already guaranteed it is non-empty.
+  const submittedFullName = s.fullName.trim();
   const agreementPdf = await renderAgreementPdf({
-    fullName: c.fullName,
+    fullName: submittedFullName,
     designation: humanize(c.intendedDesignation ?? "Sales Associate"),
     email: normalizeEmail(c.email),
     mobile: c.mobileNumber,
@@ -511,6 +520,10 @@ export async function submitOnboarding(
     where: { id: c.id },
     data: {
       submittedPayload: { ...payload, signedPdfSha256: createHash("sha256").update(agreementPdf).digest("hex") },
+      // Owner request 2026-10-19: persist the candidate's own full legal name so
+      // the admin views, approveCandidate → Associate, and any later agreement
+      // render all read the same name the candidate signed under.
+      fullName: submittedFullName,
       // The candidate's own choice, not the inviter's — admin views read
       // this same column (owner ruling 2026-10-17).
       commencementDate: new Date(s.commencementDate),

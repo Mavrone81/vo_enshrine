@@ -49,6 +49,7 @@ export function OnboardForm({ token, alreadySubmitted, prefill }: { token: strin
   // signature and agreementAccepted are deliberately NEVER prefilled — a
   // signature is an act, re-drawn and re-accepted on every submission.
   const [f, setF] = useState<OnboardingSubmission>({
+    fullName: prefill.fullName ?? "",
     commencementDate: prefill.commencementDate ?? "",
     businessName: prefill.businessName ?? undefined,
     nric: prefill.nric ?? "",
@@ -171,6 +172,13 @@ export function OnboardForm({ token, alreadySubmitted, prefill }: { token: strin
       <div className="rounded-xl border border-line bg-white p-5">
         <h2 className="mb-4 font-display text-[16px] text-ink">{t("details.title")}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="fullName">{t("details.fullName")}</Label>
+            <Input id="fullName" value={f.fullName} onChange={(e) => set({ fullName: e.target.value })}
+              placeholder={t("details.fullNamePlaceholder")}
+              className={cls("fullName")} {...a11y("fullName")} />
+            {fieldError("fullName")}
+          </div>
           <div>
             <Label htmlFor="commencementDate">{t("details.commencementDate")}</Label>
             <Input id="commencementDate" type="date" min={dateBounds.min} max={dateBounds.max}

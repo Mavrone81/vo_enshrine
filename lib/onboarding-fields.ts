@@ -12,6 +12,7 @@ import type { OnboardingSubmission } from "@/server/recruitment/actions";
 
 /** Required fields, in DOCUMENT ORDER (the order they appear on the page). */
 export const ONBOARDING_FIELD_ORDER = [
+  "fullName",
   "commencementDate",
   "nric",
   "nationality",
@@ -30,6 +31,7 @@ export type OnboardingField = (typeof ONBOARDING_FIELD_ORDER)[number];
 
 /** `errors.*` i18n key shown at the field, and returned by the server, for each field. */
 export const ONBOARDING_REQUIRED_ERROR_CODE: Record<OnboardingField, string> = {
+  fullName: "fullNameRequired",
   // Presence only — the today..+12-months range check is onboardingSchema's
   // alone (candidateCommencementDate, lib/schemas.ts), per this file's own
   // division of labor (see the file header comment).
@@ -54,6 +56,7 @@ export const ONBOARDING_REQUIRED_ERROR_CODE: Record<OnboardingField, string> = {
  * control cannot take focus, so the form falls back to the "agreementView" link.
  */
 export const ONBOARDING_FIELD_DOM_ID: Record<OnboardingField, string> = {
+  fullName: "fullName",
   commencementDate: "commencementDate",
   nric: "nric", nationality: "nationality", gender: "gender", religion: "religion",
   spouseConflict: "spouseConflict", spouseName: "spouseName", spouseCompany: "spouseCompany",
@@ -78,6 +81,7 @@ export function findInvalidOnboardingFields(
   // (onboardingSchema: spouseConflict is z.boolean(), owner ruling).
   const conflictYes = f.spouseConflict === true;
   const missing: Record<OnboardingField, boolean> = {
+    fullName: blank(f.fullName),
     commencementDate: blank(f.commencementDate),
     nric: blank(f.nric),
     nationality: blank(f.nationality),

@@ -21,6 +21,7 @@ const INITIAL = { nric: "", paymentMethod: "PayNow" as const, agreementAccepted:
 // agreement box and the signature the Submit button already demands) —
 // spouseConflict is left at its default, i.e. unanswered.
 const ALL_FILLED_BUT_SPOUSE_CONFLICT = {
+  fullName: "Tan Ah Kow",
   commencementDate: VALID_COMMENCEMENT_DATE,
   nric: "S1234567A",
   nationality: "Singaporean",
@@ -43,11 +44,11 @@ describe("findInvalidOnboardingFields", () => {
 
   it("Case B: an all-empty submit identifies the first required field in document order and marks every required field", () => {
     const r = findInvalidOnboardingFields(INITIAL);
-    // commencementDate (owner ruling 2026-10-17) is now first in document order.
-    expect(r.first).toBe("commencementDate");
+    // fullName (owner request 2026-10-19) is now first in document order.
+    expect(r.first).toBe("fullName");
     // Spouse sub-fields are NOT required until the conflict is declared Yes.
     expect(r.invalid).toEqual([
-      "commencementDate", "nric", "nationality", "gender", "religion", "spouseConflict", "agreementAccepted", "signature",
+      "fullName", "commencementDate", "nric", "nationality", "gender", "religion", "spouseConflict", "agreementAccepted", "signature",
     ]);
   });
 
@@ -117,7 +118,7 @@ describe("wiring that the pure function depends on", () => {
   });
 
   it("every required label carries exactly one asterisk, in both catalogues", () => {
-    const labels = (c: typeof en) => [c.onboarding.details.commencementDate, c.onboarding.details.nric, c.onboarding.details.nationality,
+    const labels = (c: typeof en) => [c.onboarding.details.fullName, c.onboarding.details.commencementDate, c.onboarding.details.nric, c.onboarding.details.nationality,
       c.onboarding.details.gender, c.onboarding.details.religion, c.onboarding.details.spouseConflict];
     for (const l of [...labels(en), ...labels(zhCN as typeof en)]) {
       expect(l.match(/\*/g)).toHaveLength(1);
