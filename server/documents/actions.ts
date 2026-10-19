@@ -26,7 +26,7 @@ export type DocumentUpload = {
   file: File;
 };
 
-const MAX_BYTES = 15_000_000;
+const MAX_BYTES = 150_000_000;
 
 export async function uploadDocument(input: DocumentUpload): Promise<{ ok: boolean; error?: string }> {
   const t = await getTranslations("errors");
@@ -77,31 +77,42 @@ export async function deleteDocument(id: string): Promise<{ ok: boolean; error?:
   const t = await getTranslations("errors");
   const session = await requireAdmin();
   if (!session) return { ok: false, error: t("forbidden") };
-  const doc = await prisma.document.findUnique({ where: { id }, select: { fileKey: true } });
-
-  // INT-5. Order matters, and it is not symmetrical: the row delete can be
-  // REFUSED, the file delete essentially cannot. `documents_superseded_by_fkey`
+  // Collect this document AND its entire retired supersession history: every
+  // row that chains up to it via superseded_by. `documents_superseded_by_fkey`
   // (documents.superseded_by -> documents.id, ON DELETE RESTRICT) refuses to
-  // delete any row a retired template still points at — which is every current
-  // template row that has ever been replaced. Removing the file first turned
-  // that refusal into a surviving row pointing at a file that is already gone:
-  // the document still lists and still opens in the UI, and fails only at
-  // download, with nothing detecting it afterwards.
-  //
-  // So: commit the DB truth FIRST, then remove the file — the same ordering
-  // rule as deleteMarketingCollection (server/marketing/actions.ts). The
-  // explicit transaction matters here because that FK is DEFERRABLE INITIALLY
-  // DEFERRED: its check runs at COMMIT, not at the DELETE statement, so the
-  // refusal can only be known once the transaction has resolved. Nothing is
-  // destroyed before that point, which makes the refusal retryable.
+  // delete any row a retired predecessor still points at — and a re-upload
+  // leaves exactly such a hidden retired row, with no UI path to it, which is
+  // why deleting a re-uploaded document used to fail with documentStill
+  // referenced and no way forward. Deleting the whole chain together is what
+  // makes the delete succeed. Prisma has no recursive query, so the chain walk
+  // is one raw CTE; the delete itself stays ordinary Prisma.
+  const chain = await prisma.$queryRaw<{ id: string; file_key: string | null }[]>(Prisma.sql`
+    WITH RECURSIVE chain AS (
+      SELECT id, file_key FROM documents WHERE id = ${id}::uuid
+      UNION ALL
+      SELECT d.id, d.file_key FROM documents d JOIN chain c ON d.superseded_by = c.id
+    )
+    SELECT id, file_key FROM chain
+  `);
+  if (chain.length === 0) return { ok: true }; // already gone — idempotent
+  const ids = chain.map((r) => r.id);
+
+  // INT-5. Order matters and is not symmetrical: the row delete can be REFUSED,
+  // the file delete essentially cannot. Commit the DB truth FIRST, then remove
+  // the files — an orphaned file costs disk and breaks nothing, whereas a
+  // surviving row pointing at a deleted file lists and opens but fails at
+  // download. The explicit transaction matters because that FK is DEFERRABLE
+  // INITIALLY DEFERRED: its check runs at COMMIT, so deleting a predecessor and
+  // its successor together passes, and a genuine refusal is only known once the
+  // transaction has resolved — nothing is destroyed before that point.
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.document.delete({ where: { id } });
+      await tx.document.deleteMany({ where: { id: { in: ids } } });
     });
   } catch (e) {
     // P2003 = FK constraint; P2014 = Prisma's own required-relation refusal.
-    // Any other error rethrows exactly as before — in every case the file is
-    // still untouched, because this runs before the delete below.
+    // Any other error rethrows exactly as before — in every case the files are
+    // still untouched, because this runs before the file delete below.
     if (e instanceof Prisma.PrismaClientKnownRequestError && (e.code === "P2003" || e.code === "P2014")) {
       return { ok: false, error: t("documentStillReferenced") };
     }
@@ -113,10 +124,12 @@ export async function deleteDocument(id: string): Promise<{ ok: boolean; error?:
   // strictly the better failure than the inverse, so it does not fail the
   // operation. Logged (tag, id and error class only) so it is not silent —
   // deleteObject itself already swallows a missing file.
-  if (doc?.fileKey) {
-    await deleteObject(doc.fileKey).catch((e: unknown) => {
-      console.error(`[orphaned-object] document ${id} ${e instanceof Error ? e.name : "error"}`);
-    });
+  for (const row of chain) {
+    if (row.file_key) {
+      await deleteObject(row.file_key).catch((e: unknown) => {
+        console.error(`[orphaned-object] document ${row.id} ${e instanceof Error ? e.name : "error"}`);
+      });
+    }
   }
   await logAudit({ action: "document.deleted", entityType: "Document", entityId: id, actorUserId: session.user.id });
   revalidatePath("/admin/documents");

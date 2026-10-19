@@ -17,7 +17,7 @@ async function requireAdmin() {
   return session;
 }
 
-const MAX_BYTES = 15_000_000; // same cap as the generic document upload (server/documents/actions.ts)
+const MAX_BYTES = 150_000_000; // same cap as the generic document upload (server/documents/actions.ts)
 const EXT_FOR_KIND: Record<"pdf" | "png" | "jpeg", string> = { pdf: "pdf", png: "png", jpeg: "jpg" };
 
 export type DocTemplateUpload = { category: TemplateCategory; title: string; file: File };
