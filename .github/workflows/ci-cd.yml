@@ -23,9 +23,6 @@ concurrency:
   group: ci-cd-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  IMAGE: ghcr.io/mavrone81/virtualoffice
-
 jobs:
   # ---------------------------------------------------------------------------
   # CI — typecheck, lint, unit tests. Runs on every push and PR.
@@ -209,6 +206,9 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
+      - name: Compute GHCR namespace
+        id: ghcr
+        run: .github/scripts/compute-ghcr-namespace.sh "${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - name: Build tools image (local only)
         uses: docker/build-push-action@v6
@@ -217,13 +217,13 @@ jobs:
           target: tools
           load: true
           push: false
-          tags: ${{ env.IMAGE }}-tools:${{ github.sha }}
+          tags: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice-tools:${{ github.sha }}
           labels: org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
       - name: Smoke test
         env:
           TEST_DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vo_tools?schema=public"
-        run: deploy/tools-image-smoke.sh "${{ env.IMAGE }}-tools:${{ github.sha }}"
+        run: deploy/tools-image-smoke.sh "ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice-tools:${{ github.sha }}"
 
   # ---------------------------------------------------------------------------
   # Publish the tools image. Separate from tools-image because that job executes
@@ -242,6 +242,9 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+      - name: Compute GHCR namespace
+        id: ghcr
+        run: .github/scripts/compute-ghcr-namespace.sh "${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -256,7 +259,7 @@ jobs:
           context: .
           target: tools
           push: true
-          tags: ${{ env.IMAGE }}-tools:${{ github.sha }}
+          tags: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice-tools:${{ github.sha }}
           labels: org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
       - name: Record the tools image digest (runbooks pin by digest, not tag)
@@ -286,6 +289,9 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+      - name: Compute GHCR namespace
+        id: ghcr
+        run: .github/scripts/compute-ghcr-namespace.sh "${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -299,8 +305,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice:latest
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice:${{ github.sha }}
           # F7: bake the commit into the image so /api/health can report which build is
           # actually running, and the post-deploy check can fail the job on a mismatch.
           build-args: |
@@ -347,6 +353,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+
+      - name: Compute GHCR namespace
+        id: ghcr
+        run: .github/scripts/compute-ghcr-namespace.sh "${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
 
       - name: Check deploy secrets are configured
         id: check
@@ -484,9 +494,9 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
           DEPLOY_SHA: ${{ github.sha }}
-          APP_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
+          APP_IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice:${{ github.sha }}
 
       - name: Back off 10s before Deploy over SSH attempt 2
         if: steps.check.outputs.ready == 'true' && steps.deploy_a1.outcome == 'failure'
@@ -538,9 +548,9 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
           DEPLOY_SHA: ${{ github.sha }}
-          APP_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
+          APP_IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice:${{ github.sha }}
 
       - name: Back off 20s before Deploy over SSH attempt 3
         if: steps.check.outputs.ready == 'true' && steps.deploy_a2.outcome == 'failure'
@@ -591,9 +601,9 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
           DEPLOY_SHA: ${{ github.sha }}
-          APP_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
+          APP_IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice:${{ github.sha }}
 
       - name: Report deploy SSH attempts used
         if: always() && steps.check.outputs.ready == 'true'
@@ -695,7 +705,7 @@ jobs:
             fi
         env:
           DEPLOY_SHA: ${{ github.sha }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
 
       - name: Back off 10s before Verify and reclaim over SSH attempt 2
         if: steps.check.outputs.ready == 'true' && steps.verify_a1.outcome == 'failure'
@@ -779,7 +789,7 @@ jobs:
             fi
         env:
           DEPLOY_SHA: ${{ github.sha }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
 
       - name: Back off 20s before Verify and reclaim over SSH attempt 3
         if: steps.check.outputs.ready == 'true' && steps.verify_a2.outcome == 'failure'
@@ -862,7 +872,7 @@ jobs:
             fi
         env:
           DEPLOY_SHA: ${{ github.sha }}
-          IMAGE: ${{ env.IMAGE }}
+          IMAGE: ghcr.io/${{ steps.ghcr.outputs.owner }}/virtualoffice
 
       - name: Report verify/reclaim SSH attempts used
         if: always() && steps.check.outputs.ready == 'true'

@@ -22,7 +22,13 @@ services:
     # CI builds & pushes this image to GHCR; prod `pull`s it (see
     # .github/workflows/ci-cd.yml). `build:` is kept as a manual fallback so
     # `docker compose build app` still works on the server if ever needed.
-    image: ${APP_IMAGE:-ghcr.io/mavrone81/virtualoffice:latest}
+    # GHCR_NAMESPACE: the account moved once already (the old one's Actions minutes
+    # exhausted, no per-account fix for that) -- defaults to the CURRENT namespace, so
+    # switching is a single env line in whatever file the 165 box's own compose run reads
+    # its env from, never a code edit. ci-cd.yml derives the same value from the repo's
+    # own owner for the image it actually builds and pushes; this is the box's own,
+    # independent read of the same concept, same as every box script this patch touches.
+    image: ${APP_IMAGE:-ghcr.io/${GHCR_NAMESPACE:-mavrone81}/virtualoffice:latest}
     build:
       context: .
       dockerfile: Dockerfile
