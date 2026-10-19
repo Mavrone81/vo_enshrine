@@ -8,6 +8,11 @@
 export const SALES_ASSOCIATE_FAQ_IDS = [
   "whatCanIDo",
   "howWasIOnboarded",
+  // PD, 2026-10-17 re-cut (same PR as the commencement-date/resubmission
+  // ownership change landing): who sets the commencement date now, and
+  // what resubmitting before approval actually does.
+  "whoDecidesCommencementDate",
+  "resubmittingDoIStartOver",
   "whereSubmitSale",
   "splitPartnerNext",
   "whereQuotationsAgreements",

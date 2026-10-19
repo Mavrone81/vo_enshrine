@@ -6,6 +6,8 @@ export const SALES_DIRECTOR_FAQ_IDS = [
   "canIApproveAnyAssociate",
   "doISeeOtherDirectors",
   "howInviteCandidate",
+  // PD, 2026-10-17 re-cut: the invite-time field is now optional.
+  "commencementDateOptionalOnInvite",
   "whatCommissionFigures",
   "canISetQuota",
   "whoDoIContact",

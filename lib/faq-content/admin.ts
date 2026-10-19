@@ -3,6 +3,9 @@
 export const ADMIN_FAQ_IDS = [
   "whatCanISeeVsAccounts",
   "whereApproveOnboarding",
+  // PD, 2026-10-17 re-cut: the invite-time field is now optional (Admin is
+  // one of the three invite-capable roles — RECRUITER_ROLES).
+  "commencementDateOptionalOnInvite",
   "howHandleApprovals",
   "whereMoneySide",
   "canISubmitSale",

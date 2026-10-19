@@ -2067,6 +2067,14 @@
             "question": "How was I onboarded?",
             "answer": "Your upline sent you a one-time invite link. You filled in your details, uploaded the required photo/signature, and signed your associate agreement on that same device. Once a Business Admin approves it, your account is created and you can log in — until then there's nothing to log into yet."
           },
+          "whoDecidesCommencementDate": {
+            "question": "Who decides my commencement date?",
+            "answer": "You do: you pick it on your onboarding form (today or later, up to 12 months ahead). If whoever invited you suggested a date, it's filled in and you can change it."
+          },
+          "resubmittingDoIStartOver": {
+            "question": "I need to fix something after submitting. Do I start over?",
+            "answer": "No. Reopen your link before you're approved and your earlier answers are kept (NRIC and bank number stay hidden unless you change them). You'll sign again."
+          },
           "whereSubmitSale": {
             "question": "Where do I submit a new sale?",
             "answer": "Submissions → Transaction Submission. Pick the product, enter the deal details, and add a split partner if this sale is shared with someone else. You'll see the submission move through approval (if a split is involved) and then quotation approval before it can be closed."
@@ -2145,6 +2153,10 @@
             "question": "How do I invite a new candidate?",
             "answer": "My Team → Invite Candidate. They get a one-time link, fill in their details, upload what's required, and sign their agreement — same onboarding flow every new associate goes through. Approval is a separate step once they've submitted."
           },
+          "commencementDateOptionalOnInvite": {
+            "question": "Do I have to set a commencement date when inviting?",
+            "answer": "No, it's optional. If you enter one, the candidate sees it pre-filled and can change it."
+          },
           "whatsOnTeamDashboard": {
             "question": "What's on my Team Dashboard?",
             "answer": "Your downline roster — the associates under you, their designations, and recruitment-related figures. This is separate from Team Performance, which is sales/commission activity rather than the roster itself."
@@ -2190,6 +2202,10 @@
             "question": "How do I invite a new candidate?",
             "answer": "My Team → Invite Candidate, same flow as a Sales Manager."
           },
+          "commencementDateOptionalOnInvite": {
+            "question": "Do I have to set a commencement date when inviting?",
+            "answer": "No, it's optional. If you enter one, the candidate sees it pre-filled and can change it."
+          },
           "whatCommissionFigures": {
             "question": "What commission figures do I see?",
             "answer": "Your own transactions, same as any sales role. Approving a split shows you the raw split value entered, not a breakdown of the company's share or anyone else's final payout number."
@@ -2214,6 +2230,10 @@
           "whereApproveOnboarding": {
             "question": "Where do I approve a new associate's onboarding?",
             "answer": "Recruitment → Associates. A submitted onboarding form moves from Invited → Form Submitted → Signed/Pending Approval, and you approve or reject it there. Rejecting doesn't delete the candidate's submission; it just stops it moving forward."
+          },
+          "commencementDateOptionalOnInvite": {
+            "question": "Do I have to set a commencement date when inviting?",
+            "answer": "No, it's optional. If you enter one, the candidate sees it pre-filled and can change it."
           },
           "howHandleApprovals": {
             "question": "How do I handle split or quotation approvals that reach my desk?",

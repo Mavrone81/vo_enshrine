@@ -4,6 +4,8 @@ export const SALES_MANAGER_FAQ_IDS = [
   "whatCanIDoMore",
   "doIApproveSplits",
   "howInviteCandidate",
+  // PD, 2026-10-17 re-cut: the invite-time field is now optional.
+  "commencementDateOptionalOnInvite",
   "whatsOnTeamDashboard",
   "whereSubmitTrack",
   "whatCommissionCanISee",
