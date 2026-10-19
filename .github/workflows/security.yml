@@ -42,9 +42,16 @@ jobs:
   # `pnpm.auditConfig.ignoreGhsas` — never a blanket `--audit-level` drop. See
   # docs/dependency-audit-waivers.md for every waiver's reason and re-check trigger; a new
   # advisory against an UNBOUNDED or already-waived package is a real, new finding, not
-  # expected noise. `continue-on-error` removed in the same change this comment describes —
-  # confirmed first via the real branch-protection API (404: no protection rules exist on this
-  # repo's main at all), so there is no required-check interaction to break.
+  # expected noise. `continue-on-error` removed in the same change this comment describes.
+  # 🔴 This repo's `main` DOES have required status checks (`test`, `Credential-shaped
+  # literals` — confirmed directly via the PR-level GraphQL `isRequired` field, the one view
+  # that reads correctly for a non-admin token; the REST branch-protection endpoint 404s for
+  # anyone without admin on the repo regardless of whether protection exists, and even
+  # `branchProtectionRules` over GraphQL can come back silently empty the same way — neither
+  # absence is evidence of "no protection"). This job is confirmed `isRequired: false` there,
+  # by the owner's own explicit decision, not because no protection exists at all — removing
+  # `continue-on-error` is safe because this check staying non-required is a deliberate choice,
+  # not a structural gap.
   # ---------------------------------------------------------------------------
   audit:
     name: Dependency advisories (high + critical)
