@@ -193,8 +193,18 @@ export async function signAshesAgreement(
   const agreement = sub.ashesAgreement;
   if (!agreement) return { ok: false, error: t("notFound") };
   // Superseded (✎6): not re-signable directly — an edit that re-adds the
-  // product it needs reinstates it to Draft first.
-  if (agreement.status === AshesAgreementStatus.Signed || agreement.status === AshesAgreementStatus.Superseded) {
+  // product it needs reinstates it to Draft first. Rejected (owner decision,
+  // follow-up to #3): the submission itself is terminal by the time this
+  // value exists on a row — rejectSubmission's own CAS (status: Submitted)
+  // already makes this unreachable in practice, same distributed-invariant
+  // defense-in-depth this function's own comment below already describes;
+  // named explicitly here rather than left to fall through to the CAS
+  // mismatch further down, matching Signed/Superseded's existing style.
+  if (
+    agreement.status === AshesAgreementStatus.Signed ||
+    agreement.status === AshesAgreementStatus.Superseded ||
+    agreement.status === AshesAgreementStatus.Rejected
+  ) {
     return { ok: false, error: t("alreadyProcessed") };
   }
   // Defense-in-depth (DevLead review of 0393c0a): nothing currently reaches

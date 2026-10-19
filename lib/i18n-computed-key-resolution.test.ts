@@ -94,7 +94,7 @@ const FAMILIES: Family[] = [
   {
     namespace: "portal.saleDetail.ashesAgreementStatus",
     // prisma/schema.prisma AshesAgreementStatus enum, lower-cased by the call site.
-    values: ["draft", "signed", "superseded"],
+    values: ["draft", "signed", "superseded", "rejected"],
     source: "prisma/schema.prisma enum AshesAgreementStatus; app/portal/sales/[id]/page.tsx — t(`saleDetail.ashesAgreementStatus.${s.ashesAgreement.status.toLowerCase()}`)",
   },
   {

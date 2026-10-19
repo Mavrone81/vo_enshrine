@@ -1653,13 +1653,16 @@ export async function rejectSubmission(submissionId: string, reason?: string): P
   // reused for a second trigger that satisfies its own documented
   // precondition (everSigned).
   //
-  // A NEVER-SIGNED (still Draft) agreement is deliberately left untouched: the
-  // only existing precedent for a never-signed "no longer needed" row is
-  // hard-delete (this file's editSale, "Only a never-signed Draft is deleted
-  // outright") — which contradicts "move to a terminal state," and
-  // AshesAgreementStatus's own exhaustiveness guard test means a genuinely
-  // new value is a reviewed decision, not something to add here. STOP-
-  // flagged to DevLead/PD rather than guessed; see the delivery manifest.
+  // A NEVER-SIGNED (still Draft) agreement cascades to the NEW `Rejected`
+  // value (owner decision, 19 Oct 2026, follow-up to this same bug): the
+  // only prior precedent for a never-signed "no longer needed" row was
+  // hard-delete (this file's editSale), which the owner ruled out — it would
+  // delete the agreement the read-only page opens, contradicting "open but
+  // grey out." `Rejected` is its own migration
+  // (20261019100000_ashes_rejected_status, ALTER TYPE ADD VALUE only, per
+  // the same-transaction-can't-use-a-just-added-enum-value rule) and is
+  // written ONLY here — never by anything that treats a submission as
+  // still live.
   //
   // The agreement is re-read INSIDE this transaction (not from a pre-transaction
   // snapshot) so a sign-then-reject race can't cascade on stale data.
@@ -1669,7 +1672,7 @@ export async function rejectSubmission(submissionId: string, reason?: string): P
         where: { id: submissionId, status: SubmissionStatus.Submitted },
         data: { status: SubmissionStatus.Rejected, rejectedAt: new Date() },
       });
-      let supersededAgreementId: string | null = null;
+      let cascadedAgreement: { id: string; to: "Superseded" | "Rejected" } | null = null;
       if (res.count === 1) {
         const agreement = await db.petsAshesAgreement.findUnique({
           where: { submissionId },
@@ -1678,16 +1681,20 @@ export async function rejectSubmission(submissionId: string, reason?: string): P
         const everSigned = !!agreement && (agreement.signatureVersion > 0 || agreement.signedAt !== null);
         if (agreement && everSigned && agreement.status !== AshesAgreementStatus.Superseded) {
           await db.petsAshesAgreement.update({ where: { id: agreement.id }, data: { status: AshesAgreementStatus.Superseded } });
-          supersededAgreementId = agreement.id;
+          cascadedAgreement = { id: agreement.id, to: "Superseded" };
+        } else if (agreement && !everSigned && agreement.status === AshesAgreementStatus.Draft) {
+          await db.petsAshesAgreement.update({ where: { id: agreement.id }, data: { status: AshesAgreementStatus.Rejected } });
+          cascadedAgreement = { id: agreement.id, to: "Rejected" };
         }
       }
-      return { res, supersededAgreementId };
+      return { res, cascadedAgreement };
     },
-    ({ res, supersededAgreementId }) => {
+    ({ res, cascadedAgreement }) => {
       if (res.count !== 1) return [];
       const entries: Parameters<typeof auditTx>[1][] = [{ action: "submission.rejected", entityType: "SalesSubmission", entityId: submissionId, actorUserId: session.user.id, after: { reason: trimmedReason } }];
-      if (supersededAgreementId) {
-        entries.push({ action: "ashes.superseded", entityType: "PetsAshesAgreement", entityId: supersededAgreementId, actorUserId: session.user.id, after: { status: "Superseded", reason: "submission_rejected" } });
+      if (cascadedAgreement) {
+        const action = cascadedAgreement.to === "Superseded" ? "ashes.superseded" : "ashes.rejected";
+        entries.push({ action, entityType: "PetsAshesAgreement", entityId: cascadedAgreement.id, actorUserId: session.user.id, after: { status: cascadedAgreement.to, reason: "submission_rejected" } });
       }
       return entries;
     },
