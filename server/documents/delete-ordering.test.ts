@@ -30,7 +30,8 @@ type Row = { id: string; fileKey: string };
 const { authMock, prismaMock, logAuditMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
   prismaMock: {
-    document: { findUnique: vi.fn(), delete: vi.fn() },
+    document: { findUnique: vi.fn(), deleteMany: vi.fn() },
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
   },
   logAuditMock: vi.fn(),
@@ -80,13 +81,19 @@ beforeEach(async () => {
     return row ? { fileKey: row.fileKey } : null;
   });
 
-  prismaMock.document.delete.mockImplementation(async ({ where }: { where: { id: string } }) => {
+  // The recursive-CTE chain read: the target plus any retired predecessors. The
+  // fixture models the chain through `rows`, so return every present row as the
+  // raw query does — id + file_key (the mapped column name).
+  prismaMock.$queryRaw.mockImplementation(async () =>
+    [...rows.values()].map((r) => ({ id: r.id, file_key: r.fileKey })),
+  );
+
+  prismaMock.document.deleteMany.mockImplementation(async ({ where }: { where: { id: { in: string[] } } }) => {
     if (mode === "refuseStatement") throw fkRefusal();
     if (mode === "transientFailure") throw new Error("connection closed before the statement completed");
-    const row = rows.get(where.id);
-    if (!row) throw new Prisma.PrismaClientKnownRequestError("no such record", { code: "P2025", clientVersion: "test" });
-    rows.delete(where.id);
-    return row;
+    let count = 0;
+    for (const did of where.id.in) if (rows.delete(did)) count++;
+    return { count };
   });
 
   // Runs the callback, then COMMITs. The FK is DEFERRABLE INITIALLY DEFERRED,
@@ -206,5 +213,38 @@ describe("deleteDocument ordering (INT-5)", () => {
     expect(r.outcome === "returned" && r.returned).toEqual({ ok: true });
     expect(rows.size).toBe(0); // rows after: 0 — the DB truth committed
     expect(await objectIsPresent()).toBe(true); // the orphan, deliberately tolerated
+  });
+
+  // Owner-reported 2026-10-19: a re-uploaded document could not be deleted. A
+  // re-upload leaves a hidden RETIRED predecessor whose superseded_by points at
+  // the current row (ON DELETE RESTRICT), so deleting the current row alone is
+  // refused and there is no UI path to the predecessor. The fix deletes the
+  // whole chain together. Non-vacuous by a real decoy: the predecessor PRED_ID
+  // is present with its own file, and the test asserts BOTH rows are passed to
+  // the one deleteMany and both files are removed — deleting only the target
+  // (the old behaviour) would leave PRED_ID behind and the single deleteMany
+  // call would carry one id, failing the assertions below.
+  it("deletes a re-uploaded document together with its hidden retired predecessor(s)", async () => {
+    const PRED_ID = "00000000-0000-4000-8000-0000000000f0";
+    const predKey = `test/int5-${randomUUID()}/retired-predecessor.pdf`;
+    await storage.putObject(predKey, Buffer.from("retired predecessor fixture bytes"));
+    rows.set(PRED_ID, { id: PRED_ID, fileKey: predKey });
+    try {
+      expect(rows.size).toBe(2); // current + one retired predecessor
+
+      const r = await callDelete();
+
+      expect(r.outcome === "returned" && r.returned).toEqual({ ok: true });
+      // The whole chain went in ONE deleteMany call, carrying BOTH ids.
+      expect(prismaMock.document.deleteMany).toHaveBeenCalledTimes(1);
+      const arg = prismaMock.document.deleteMany.mock.calls[0][0] as { where: { id: { in: string[] } } };
+      expect([...arg.where.id.in].sort()).toEqual([DOC_ID, PRED_ID].sort());
+      // Both rows and both files are gone.
+      expect(rows.size).toBe(0);
+      expect(await storage.getObject(predKey)).toBeNull();
+      expect(await objectIsPresent()).toBe(false);
+    } finally {
+      await realDeleteObject(predKey);
+    }
   });
 });

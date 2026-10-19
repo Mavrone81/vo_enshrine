@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     // Server Action. Next's default Server Action body limit is 1 MB, which 413s
     // any real submission before the action runs. Lift it above the app-level cap
     // with headroom for the signature + form fields + multipart overhead.
-    serverActions: { bodySizeLimit: "10mb" },
+    serverActions: { bodySizeLimit: "150mb" },
   },
   // #29: the single-use token lives in this page's own URL (browser history,
   // any Referer header a subresource or outbound navigation would otherwise

@@ -47,6 +47,11 @@ export function DocumentForm({ currentTemplates }: { currentTemplates: Partial<R
   function upload(confirmedReplace: boolean) {
     setError(undefined);
     if (!file) { setError(t("form.errorNoFile")); return; }
+    // Reject oversized files in the browser with a clear message. Without this,
+    // a file over the limit is rejected by the proxy mid-upload and surfaces as
+    // a generic server-error page instead of a readable reason. 150 MB mirrors
+    // the server cap (server/documents/{actions,template-actions}.ts MAX_BYTES).
+    if (file.size > 150_000_000) { setError(t("form.errorTooLarge")); return; }
     start(async () => {
       // A category template takes no audience: it is always shared with everyone.
       const r = category
