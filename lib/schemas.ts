@@ -454,6 +454,12 @@ export const onboardingSchema = z.object({
   // see candidateCommencementDate above. Supersedes the inviter's own,
   // now-optional and non-binding field on inviteCandidateSchema.
   commencementDate: candidateCommencementDate,
+  // Owner request 2026-10-19: the candidate fills their own full legal name as
+  // per NRIC/passport at onboarding (before only the inviter-set name stood).
+  // Required; this is the value stamped onto the Associate Agreement's "Name of
+  // Applicant as in NRIC/Passport" box (server/recruitment/actions.ts →
+  // renderAgreementPdf), so a blank here would leave that box empty.
+  fullName: z.string().trim().min(1, "fullNameRequired").max(200),
   businessName: z.string().trim().max(200).optional(),
   // Encrypted at rest — validate shape/length only. Both local NRIC/FIN and
   // foreign-passport-style identifiers flow through here, so no fixed regex.

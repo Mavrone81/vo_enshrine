@@ -46,6 +46,7 @@ vi.mock("@/lib/mail", () => ({ sendMail: vi.fn(), onboardingInviteEmail: vi.fn()
 import { submitOnboarding } from "./actions";
 
 const validSubmission = {
+  fullName: "Jane Tan",
   commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   nric: "S1234567A",
   paymentMethod: "PayNow" as const,
@@ -103,6 +104,7 @@ describe("submitOnboarding rate limiting", () => {
 
   it("records a failure keyed by the token when validation fails", async () => {
     const malformed = {
+      fullName: "Jane Tan",
       commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       nric: "S1234567A",
       paymentMethod: "Crypto",

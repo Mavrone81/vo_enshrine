@@ -53,6 +53,7 @@ const VALID_COMMENCEMENT_DATE = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).t
 
 function baseSubmission(overrides: Record<string, unknown> = {}) {
   return {
+    fullName: "Jane Tan",
     commencementDate: VALID_COMMENCEMENT_DATE,
     nric: REAL_NRIC,
     paymentMethod: "Bank Transfer" as const,

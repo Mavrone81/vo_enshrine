@@ -20,6 +20,7 @@ const TAG = "C4FILING-";
 const FAKE_PNG_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 const validSubmission = {
+  fullName: "Jane Tan",
   commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   nric: "S1234567A",
   paymentMethod: "PayNow" as const,

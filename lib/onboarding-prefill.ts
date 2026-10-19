@@ -39,6 +39,10 @@ type StoredOnboardingPayload = {
  */
 export type OnboardingPrefill = {
   commencementDate?: string | null;
+  // The full legal name, prefilled from the candidate row (the inviter-set
+  // name) so the field opens populated; the candidate edits it at onboarding
+  // (owner request 2026-10-19). A real column, not part of submittedPayload.
+  fullName?: string | null;
   businessName?: string | null;
   nric?: string; // masked, or absent when nothing was stored yet
   dateOfBirth?: string | null;
@@ -63,10 +67,15 @@ export type OnboardingPrefill = {
 
 export function buildOnboardingPrefill(c: {
   commencementDate: Date | null;
+  fullName: string;
   submittedPayload: unknown;
 }): OnboardingPrefill {
   const p = (c.submittedPayload as StoredOnboardingPayload | null) ?? {};
   return {
+    // A real column (not in submittedPayload), so it survives a first visit
+    // before any submission — the inviter-set name shows until the candidate
+    // changes it.
+    fullName: c.fullName,
     // Doubles as the in-flight (not-yet-submitted) case: before a first
     // submission this column still holds the inviter's own suggested date
     // (now optional, possibly null) — same field, same prefill, no branch

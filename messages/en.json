@@ -531,6 +531,8 @@
     },
     "details": {
       "title": "Your details",
+      "fullName": "Full Name as per NRIC *",
+      "fullNamePlaceholder": "Your full name exactly as in your NRIC / passport",
       "commencementDate": "Commencement date *",
       "commencementDateHint": "The date you'll start. Today or later, within 12 months.",
       "businessName": "Business / trading name",

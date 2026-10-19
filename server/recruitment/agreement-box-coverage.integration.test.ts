@@ -371,6 +371,7 @@ beforeEach(() => {
  *  overfill of fields the schema doesn't have. */
 function maximalSubmission() {
   return {
+    fullName: "Priya Nathan",
     commencementDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     businessName: "Nathan Ventures",
     nric: "S1234567A",
