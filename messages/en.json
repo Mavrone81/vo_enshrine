@@ -948,7 +948,8 @@
       "ashesAgreementStatus": {
         "draft": "Awaiting signature",
         "signed": "Signed",
-        "superseded": "Superseded"
+        "superseded": "Superseded",
+        "rejected": "Sale rejected"
       },
       "signedDocs": "Signed documents",
       "noSigned": "No signed documents.",

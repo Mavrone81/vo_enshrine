@@ -281,12 +281,19 @@ describe("editSale — sale amount lock", () => {
     expect(r.ok).toBe(true);
   });
 
-  // 🔴 Exhaustiveness guard: if AshesAgreementStatus ever grows a 4th value,
+  // 🔴 Exhaustiveness guard: if AshesAgreementStatus ever grows a 5th value,
   // this breaks instead of silently leaving it unclassified by the lock
   // above (which only ever asks "is it Draft?" — a new value defaults to
   // "locks" today, but that default has never been a reviewed decision).
-  it("ENUM EXHAUSTIVENESS: AshesAgreementStatus is exactly {Draft, Signed, Superseded} — a new value must be a reviewed decision, not a silent default", () => {
-    expect(Object.values(AshesAgreementStatus).sort()).toEqual(["Draft", "Signed", "Superseded"].sort());
+  //
+  // `Rejected` (owner decision, 19 Oct 2026, follow-up to the rejected-
+  // submission bug, #3): reviewed under this same lock check — a Rejected
+  // agreement's submission is already terminal (editSale's own CAS at
+  // status: Submitted already refuses it before this line is ever reached),
+  // so defaulting to "locks" here is correct and was explicitly checked,
+  // not inherited silently.
+  it("ENUM EXHAUSTIVENESS: AshesAgreementStatus is exactly {Draft, Signed, Superseded, Rejected} — a new value must be a reviewed decision, not a silent default", () => {
+    expect(Object.values(AshesAgreementStatus).sort()).toEqual(["Draft", "Rejected", "Signed", "Superseded"].sort());
   });
 });
 

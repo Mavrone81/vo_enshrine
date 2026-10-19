@@ -280,6 +280,14 @@ enum AshesAgreementStatus {
   // later edit becomes Superseded. Own migration (the value can't be added
   // and used in the same transaction, same as SubmissionStatus.Verified).
   Superseded
+  // Owner decision, 19 Oct 2026 (follow-up to the rejected-submission bug,
+  // #3): a never-signed Draft agreement whose submission is rejected has no
+  // existing value that fits — Superseded's precondition is everSigned, and
+  // hard-delete was ruled out (it would delete the agreement the read-only
+  // page opens). Own migration (20261019100000), same reason as the two
+  // above. Written by rejectSubmission's cascade only; never by anything
+  // that treats a submission as still live.
+  Rejected
 }
 
 // ---------------------------------------------------------------------------

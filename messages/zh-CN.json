@@ -948,7 +948,8 @@
       "ashesAgreementStatus": {
         "draft": "待签署",
         "signed": "已签署",
-        "superseded": "已作废"
+        "superseded": "已作废",
+        "rejected": "销售已拒绝"
       },
       "signedDocs": "签署文件",
       "noSigned": "暂无签署文件。",

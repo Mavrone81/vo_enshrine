@@ -1,0 +1,13 @@
+-- Owner bug report, 19 Oct 2026 (follow-up to #3): a REJECTED submission's
+-- never-signed Draft agreement has no existing terminal-but-preserved
+-- value -- Superseded's own established precondition (everSigned) doesn't
+-- fit it, and the only prior precedent for a never-signed "no longer
+-- needed" row is hard-delete, which the owner ruled out (it would delete
+-- the agreement the read-only page opens). Owner decided: add this value.
+-- Its own migration, nothing else in it -- same reason as Verified
+-- (20260926120000) and Superseded (20260926130000): Postgres allows
+-- ADD VALUE inside a transaction (PG12+) but not USING that new value in
+-- the same one. No data change here -- nothing writes 'Rejected' to any
+-- row yet; the runtime cascade and the one-off backfill both come later,
+-- separately, as the owner's explicit SQL text (see this PR's manifest).
+ALTER TYPE "AshesAgreementStatus" ADD VALUE IF NOT EXISTS 'Rejected';
