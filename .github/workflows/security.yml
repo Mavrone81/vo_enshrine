@@ -33,34 +33,29 @@ jobs:
   # `pnpm audit` at high+critical. Reads pnpm-lock.yaml directly, so there is no
   # install step and the job finishes in seconds.
   #
-  # NON-BLOCKING until 2026-10-11 (see `continue-on-error` below): the first two
-  # weeks are for tuning the level and clearing the current backlog, not for
-  # wedging anyone's PR. After that date, remove the `continue-on-error` line and
-  # the job gates PRs.
-  #
-  # EXPECTED RED until the dev-only dependency bumps land: at the time this job
-  # was added, `--audit-level high` reports advisories that are all dev- or
-  # build-time (eslint, vitest/vite, prisma CLI toolchains) or in code paths the
-  # app never calls. None of them reaches the production image, which copies only
-  # `.next/standalone`, `public` and `.next/static`. Do not chase the red mark —
-  # read the job summary.
+  # BLOCKING as of 2026-10-19 (owner's call): the 5 high advisories this job used to report
+  # (js-yaml x2, deepmerge-ts, braces, source-map-js) are now either bumped via
+  # `pnpm.overrides` (bounded to the real consuming package's own declared range, never a bare
+  # unbounded floor) or, for the two with no patched version available at all in range
+  # (braces/GHSA-vfj7-8cjw-p6xm, and deepmerge-ts/GHSA-ggr8-5vv4-36mx — the latter needs a real
+  # breaking major the owner chose to waive rather than take), explicitly waived via
+  # `pnpm.auditConfig.ignoreGhsas` — never a blanket `--audit-level` drop. See
+  # docs/dependency-audit-waivers.md for every waiver's reason and re-check trigger; a new
+  # advisory against an UNBOUNDED or already-waived package is a real, new finding, not
+  # expected noise. `continue-on-error` removed in the same change this comment describes.
+  # 🔴 This repo's `main` DOES have required status checks (`test`, `Credential-shaped
+  # literals` — confirmed directly via the PR-level GraphQL `isRequired` field, the one view
+  # that reads correctly for a non-admin token; the REST branch-protection endpoint 404s for
+  # anyone without admin on the repo regardless of whether protection exists, and even
+  # `branchProtectionRules` over GraphQL can come back silently empty the same way — neither
+  # absence is evidence of "no protection"). This job is confirmed `isRequired: false` there,
+  # by the owner's own explicit decision, not because no protection exists at all — removing
+  # `continue-on-error` is safe because this check staying non-required is a deliberate choice,
+  # not a structural gap.
   # ---------------------------------------------------------------------------
   audit:
     name: Dependency advisories (high + critical)
     runs-on: ubuntu-latest
-    # 🔴 READ BEFORE REMOVING THIS FLAG (note added 2026-09-28, DevSecOps):
-    # Removing this flag does NOT affect required checks — `audit` is intentionally
-    # NOT a required check, and must not become one. Only the `credential-shape`
-    # job below ("Credential-shaped literals") is required.
-    #
-    # Why this note exists, for whoever removes the flag: while the flag is here this
-    # job reports SUCCESS even when it finds advisories, so making it required looks
-    # harmless — and would become a repo-wide merge block the moment you delete this
-    # line, because the dev/build-toolchain advisories it reports are expected and are
-    # triaged by reachability, not cleared. If `audit` has been made required in the
-    # meantime, UN-REQUIRE IT FIRST, then remove this flag. Check the branch
-    # protection settings; do not assume.
-    continue-on-error: true # REMOVE on/after 2026-10-11 to make this blocking (DevSecOps)
     steps:
       - uses: actions/checkout@v4
       # No `version:` on purpose. pnpm/action-setup@v4 reads `packageManager` from
