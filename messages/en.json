@@ -1923,7 +1923,9 @@
       "draftNote": "Draft saved — you can return to finish and sign later.",
       "signedTitle": "Agreement signed",
       "signedBody": "This agreement has been signed and filed into the sale's docket.",
-      "viewPdf": "View signed agreement (PDF)"
+      "viewPdf": "View signed agreement (PDF)",
+      "rejectedTitle": "Sale rejected",
+      "rejectedBody": "This sale was rejected, so its agreement is read-only and can no longer be edited or signed."
     },
     "docTemplate": {
       "title": "Quotation Request",

@@ -1639,15 +1639,61 @@ export async function rejectSubmission(submissionId: string, reason?: string): P
   if (closedDeal && !trimmedReason) return { ok: false, error: t("reasonRequired") };
 
   // CAS: only a still-Submitted row is rejected, so two admins can't both "succeed".
+  //
+  // Cascade (owner bug report, 19 Oct 2026): a rejected submission's linked
+  // ashesAgreement must not stay in a state that reads as "still live" (the
+  // report: a rejected submission's draft agreement stayed Draft; Open on it
+  // bounced to the dashboard instead of showing anything read-only — see
+  // app/portal/sales/[id]/agreement/page.tsx's fix for that half).
+  //
+  // An EVER-SIGNED agreement cascades to Superseded here — the SAME value
+  // and the SAME trigger condition editSale already uses for "no longer
+  // needed at all" (this file's own void-to-Superseded block, ✎6):
+  // Superseded is not a new meaning being introduced, it's the existing one,
+  // reused for a second trigger that satisfies its own documented
+  // precondition (everSigned).
+  //
+  // A NEVER-SIGNED (still Draft) agreement is deliberately left untouched: the
+  // only existing precedent for a never-signed "no longer needed" row is
+  // hard-delete (this file's editSale, "Only a never-signed Draft is deleted
+  // outright") — which contradicts "move to a terminal state," and
+  // AshesAgreementStatus's own exhaustiveness guard test means a genuinely
+  // new value is a reviewed decision, not something to add here. STOP-
+  // flagged to DevLead/PD rather than guessed; see the delivery manifest.
+  //
+  // The agreement is re-read INSIDE this transaction (not from a pre-transaction
+  // snapshot) so a sign-then-reject race can't cascade on stale data.
   const rejected = await writeAudited(
-    (db) => db.salesSubmission.updateMany({
-      where: { id: submissionId, status: SubmissionStatus.Submitted },
-      data: { status: SubmissionStatus.Rejected, rejectedAt: new Date() },
-    }),
-    (res) => (res.count === 1 ? [{ action: "submission.rejected", entityType: "SalesSubmission", entityId: submissionId, actorUserId: session.user.id, after: { reason: trimmedReason } }] : []),
+    async (db) => {
+      const res = await db.salesSubmission.updateMany({
+        where: { id: submissionId, status: SubmissionStatus.Submitted },
+        data: { status: SubmissionStatus.Rejected, rejectedAt: new Date() },
+      });
+      let supersededAgreementId: string | null = null;
+      if (res.count === 1) {
+        const agreement = await db.petsAshesAgreement.findUnique({
+          where: { submissionId },
+          select: { id: true, status: true, signatureVersion: true, signedAt: true },
+        });
+        const everSigned = !!agreement && (agreement.signatureVersion > 0 || agreement.signedAt !== null);
+        if (agreement && everSigned && agreement.status !== AshesAgreementStatus.Superseded) {
+          await db.petsAshesAgreement.update({ where: { id: agreement.id }, data: { status: AshesAgreementStatus.Superseded } });
+          supersededAgreementId = agreement.id;
+        }
+      }
+      return { res, supersededAgreementId };
+    },
+    ({ res, supersededAgreementId }) => {
+      if (res.count !== 1) return [];
+      const entries: Parameters<typeof auditTx>[1][] = [{ action: "submission.rejected", entityType: "SalesSubmission", entityId: submissionId, actorUserId: session.user.id, after: { reason: trimmedReason } }];
+      if (supersededAgreementId) {
+        entries.push({ action: "ashes.superseded", entityType: "PetsAshesAgreement", entityId: supersededAgreementId, actorUserId: session.user.id, after: { status: "Superseded", reason: "submission_rejected" } });
+      }
+      return entries;
+    },
   );
   if (rejected === AUDIT_UNAVAILABLE) return { ok: false, error: t("auditUnavailable") };
-  if (rejected.count === 0) return { ok: false, error: t("alreadyProcessed") };
+  if (rejected.res.count === 0) return { ok: false, error: t("alreadyProcessed") };
   revalidatePath("/admin/quotations");
   revalidatePath("/admin/sales/verify");
   revalidatePath(`/portal/sales/${submissionId}`);

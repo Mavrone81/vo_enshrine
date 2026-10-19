@@ -1923,7 +1923,9 @@
       "draftNote": "草稿已保存——可稍后返回完成并签署。",
       "signedTitle": "协议已签署",
       "signedBody": "该协议已签署并归入交易档案。",
-      "viewPdf": "查看已签署协议（PDF）"
+      "viewPdf": "查看已签署协议（PDF）",
+      "rejectedTitle": "销售已拒绝",
+      "rejectedBody": "该销售已被拒绝，其协议为只读状态，无法再编辑或签署。"
     },
     "docTemplate": {
       "title": "报价申请",

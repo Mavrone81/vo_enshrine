@@ -34,6 +34,10 @@ beforeAll(async () => {
 afterAll(async () => {
   const subs = await prisma.salesSubmission.findMany({ where: { closingAssociateId: closerId }, select: { id: true } });
   const subIds = subs.map((s) => s.id);
+  // pets_ashes_agreements_submission_id_fkey is ON DELETE RESTRICT — any
+  // agreement rows the cascade tests below create must go before the
+  // submission delete, same FK-ordering reason saleLineItem already does.
+  await prisma.petsAshesAgreement.deleteMany({ where: { submissionId: { in: subIds } } });
   await prisma.saleLineItem.deleteMany({ where: { submissionId: { in: subIds } } });
   await prisma.salesSubmission.deleteMany({ where: { id: { in: subIds } } });
   await prisma.product.deleteMany({ where: { id: productId } });
@@ -133,5 +137,88 @@ describe("rejectSubmission — flag ON", () => {
     who.session = { user: { id: adminId, associateId: null, role: "Admin" } };
     const r = await rejectSubmission(subId, "some reason");
     expect(r).toEqual({ ok: false, error: "legacyReadOnly" });
+  });
+});
+
+// Owner bug report, 19 Oct 2026: a rejected submission's agreement must not
+// stay in a state that reads as "still live." An EVER-SIGNED agreement
+// cascades to the SAME Superseded value editSale already uses for "no
+// longer needed at all" (server/sales/actions.ts ✎6) — same meaning, reused
+// trigger. A NEVER-SIGNED (still Draft) agreement is deliberately left
+// untouched — the only existing precedent for a never-signed "no longer
+// needed" row is hard-delete, which doesn't match "move to a terminal
+// state," so that half is STOP-flagged to DevLead/PD rather than guessed.
+// This suite proves both halves of that deliberate split, in the same
+// transaction as the reject.
+describe("rejectSubmission — ashes agreement cascade", () => {
+  let submitSale: (input: unknown) => Promise<{ id?: string }>;
+  let rejectSubmission: (id: string, reason?: string) => Promise<{ ok: boolean; error?: string }>;
+
+  beforeAll(async () => {
+    process.env.A17_CLOSED_DEAL_FLOW = "true";
+    vi.resetModules();
+    ({ submitSale, rejectSubmission } = (await import("./actions")) as never);
+  });
+  afterAll(() => {
+    delete process.env.A17_CLOSED_DEAL_FLOW;
+  });
+
+  async function makeAgreement(subId: string, overrides: { status: "Draft" | "Signed"; signatureVersion?: number; signedAt?: Date | null }) {
+    return prisma.petsAshesAgreement.create({
+      data: {
+        submissionId: subId, applicant1Name: "Reject Me", amountNumeric: "1000", amountWords: "One thousand",
+        paymentPlan: "FullPayment" as never, status: overrides.status as never,
+        signatureVersion: overrides.signatureVersion ?? 0, signedAt: overrides.signedAt ?? null,
+      },
+      select: { id: true },
+    });
+  }
+
+  it("an EVER-SIGNED agreement cascades to Superseded, audited with the rejection reason", async () => {
+    const subId = await makeSubmission(submitSale);
+    const agreement = await makeAgreement(subId, { status: "Signed", signatureVersion: 1, signedAt: new Date() });
+    who.session = { user: { id: adminId, associateId: null, role: "Admin" } };
+    const r = await rejectSubmission(subId, "ever-signed cascade");
+    expect(r.ok).toBe(true);
+
+    const updated = await prisma.petsAshesAgreement.findUniqueOrThrow({ where: { id: agreement.id }, select: { status: true } });
+    expect(updated.status).toBe("Superseded");
+
+    const audits = await prisma.auditLog.findMany({ where: { entityId: agreement.id, action: "ashes.superseded" } });
+    expect(audits).toHaveLength(1);
+    expect((audits[0].afterJson as { reason: string }).reason).toBe("submission_rejected");
+  });
+
+  it("a once-voided-then-reinstated agreement (Draft NOW, but everSigned via signatureVersion > 0) still cascades to Superseded — current status alone would miss this", async () => {
+    const subId = await makeSubmission(submitSale);
+    const agreement = await makeAgreement(subId, { status: "Draft", signatureVersion: 2, signedAt: null });
+    who.session = { user: { id: adminId, associateId: null, role: "Admin" } };
+    const r = await rejectSubmission(subId, "reinstated-then-rejected");
+    expect(r.ok).toBe(true);
+    const updated = await prisma.petsAshesAgreement.findUniqueOrThrow({ where: { id: agreement.id }, select: { status: true } });
+    expect(updated.status).toBe("Superseded");
+  });
+
+  it("a NEVER-SIGNED Draft agreement is left untouched — deliberate, not a miss (STOP-flagged, see manifest)", async () => {
+    const subId = await makeSubmission(submitSale);
+    const agreement = await makeAgreement(subId, { status: "Draft" });
+    who.session = { user: { id: adminId, associateId: null, role: "Admin" } };
+    const r = await rejectSubmission(subId, "never-signed, no cascade");
+    expect(r.ok).toBe(true);
+
+    const updated = await prisma.petsAshesAgreement.findUniqueOrThrow({ where: { id: agreement.id }, select: { status: true } });
+    expect(updated.status).toBe("Draft");
+
+    const audits = await prisma.auditLog.findMany({ where: { entityId: agreement.id, action: "ashes.superseded" } });
+    expect(audits).toHaveLength(0);
+  });
+
+  // The control: a submission with NO agreement at all must still reject
+  // cleanly (the cascade lookup must not throw on a null relation).
+  it("CONTROL — no ashesAgreement at all: rejects cleanly, no cascade attempted", async () => {
+    const subId = await makeSubmission(submitSale);
+    who.session = { user: { id: adminId, associateId: null, role: "Admin" } };
+    const r = await rejectSubmission(subId, "no agreement at all");
+    expect(r.ok).toBe(true);
   });
 });
