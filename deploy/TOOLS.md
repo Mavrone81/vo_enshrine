@@ -1,7 +1,8 @@
 # Running admin scripts on 165: the tools image
 
 Backfill dry runs and applies (M5 payout ids, A-0 amountCollected, SEC-12 NRIC) run from the **tools** image that CI builds
-and pushes as `ghcr.io/mavrone81/virtualoffice-tools:<git sha>`, through `deploy/vo-run-tool.sh`.
+and pushes as `ghcr.io/<account>/virtualoffice-tools:<git sha>` (the account is derived from the repo's own owner in
+ci-cd.yml, never hardcoded here), through `deploy/vo-run-tool.sh`.
 - **Nothing is built on 165.**
 - Every run needs **the owner's go**; an apply needs its own.
 
@@ -51,8 +52,8 @@ docker logout ghcr.io
 ```
 
 ## The GHCR package (the owner's settings)
-- The first push to `main` after this lands **creates a new package**, `ghcr.io/mavrone81/virtualoffice-tools`. Its
-  **visibility and who can pull it are the owner's settings.**
+- The first push to `main` after this lands **creates a new package**, `ghcr.io/<account>/virtualoffice-tools`
+  (account derived from the repo's own owner, see above). Its **visibility and who can pull it are the owner's settings.**
 - **Contents:** only code that's already in the repo:
   - no secrets and no `.env`;
   - the seed is fake after W2-a;

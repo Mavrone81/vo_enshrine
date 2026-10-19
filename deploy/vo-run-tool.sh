@@ -39,7 +39,10 @@ umask 077
 
 REPO_DIR=${VO_REPO_DIR:-/root/VirtualOffice}
 ENV_FILE=${VO_ENV_FILE:-$REPO_DIR/.env}
-TOOLS_REPO=${VO_TOOLS_REPO:-ghcr.io/mavrone81/virtualoffice-tools}
+# GHCR_NAMESPACE: the account moved once already (the old one's Actions minutes exhausted,
+# no per-account fix for that) -- defaults to the CURRENT namespace, so switching is a single
+# env line, never a code edit. Same variable docker-compose.prod.yml's own image default reads.
+TOOLS_REPO=${VO_TOOLS_REPO:-ghcr.io/${GHCR_NAMESPACE:-mavrone81}/virtualoffice-tools}
 DB_CONTAINER=${VO_DB_CONTAINER:-virtualoffice-db}
 NETWORK=${VO_NETWORK:-}          # tests only; on 165 it's derived from the DB container
 MIN_AVAIL_MB=${VO_MIN_AVAIL_MB:-1024}

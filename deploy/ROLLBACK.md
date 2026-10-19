@@ -3,8 +3,10 @@
 **There is no `:latest` retag step any more. A deploy runs one exact commit, and a rollback
 is "deploy commit X" — nothing is retagged by hand.**
 
-Every CI build pushes two tags: `ghcr.io/mavrone81/virtualoffice:latest` and
-`…:<commit-sha>`. The deploy pulls and runs the **per-commit tag**, and pins the host's
+Every CI build pushes two tags: `ghcr.io/<account>/virtualoffice:latest` and
+`…:<commit-sha>` — the account is derived from the repo's own owner in ci-cd.yml, never
+hardcoded, so this doc names the shape rather than a literal that goes stale the next time
+the repo moves accounts. The deploy pulls and runs the **per-commit tag**, and pins the host's
 source checkout to that same commit, so the migrations that run and the image that starts
 are always the same revision.
 

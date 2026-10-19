@@ -4,7 +4,9 @@
 # deploy/vo-run-tool.sh wrapper. Run by CI on every PR/push; also runs locally.
 #
 #   TEST_DATABASE_URL=postgresql://…/<throwaway db>?schema=public \
-#     deploy/tools-image-smoke.sh <image ref, e.g. ghcr.io/mavrone81/virtualoffice-tools:<sha>>
+#     deploy/tools-image-smoke.sh <image ref, e.g. ghcr.io/<account>/virtualoffice-tools:<sha> --
+#     the account is whichever one this repo currently lives under, never hardcoded here;
+#     ci-cd.yml derives it from the repo's own owner before calling this script>
 #
 # The database must be a THROWAWAY one reachable from a --network host container
 # (CI's postgres service, or a local test container): it gets migrated here.
