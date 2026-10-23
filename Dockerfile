@@ -1,10 +1,6 @@
 # Enshrine VirtualOffice — production image (Next.js standalone).
-# Pinned by digest for reproducible builds. Shared by deps, builder, migrator,
-# tools AND runner — the production image — so this is a production-image
-# determinism change. Trade: no Alpine/Node security fix arrives until this is
-# deliberately bumped. node:22-alpine = NODE_VERSION 22.23.3, image created
-# 2026-09-23, digest resolved 2026-09-27.
-FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS base
+# Use the Node.js 22.23.4 security release for every build stage.
+FROM node:22.23.4-alpine AS base
 # Version comes from package.json's `packageManager` field — one source of
 # truth. `corepack prepare pnpm@9` pinned the MAJOR only, so the image's pnpm
 # resolved latest-9.x at build time and floated between builds and against CI.
